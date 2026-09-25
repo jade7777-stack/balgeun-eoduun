@@ -847,6 +847,21 @@ dialog{border:0!important;border-radius:22px!important;box-shadow:0 24px 60px rg
 .bank-label{font-size:.76rem;font-weight:700;color:var(--muted);align-self:center;margin-right:2px}
 .termbank .tchip{cursor:default;opacity:.85}
 
+/* 좁은 화면 표지 — 그림이 잘려 뭉개지지 않게, 비버샘이 글을 가리지 않게 */
+@media (max-width:860px){
+  .land-art{order:0;width:100%;min-height:0!important;height:auto;align-self:start;aspect-ratio:4/3;background:#F2EDE1;border-radius:0}
+  .land-art img{object-fit:contain;padding:12px 12px 44px}
+  .land-art::after{display:none}
+  .land-quote{left:10px;right:10px;bottom:10px;top:auto;max-width:none;
+    font-size:.78rem;line-height:1.45;padding:8px 11px}
+  .land-art img.land-bv{width:clamp(58px,13vw,84px);right:10px;bottom:auto;top:10px}
+  .land-credit{top:10px;left:10px;right:auto;bottom:auto}
+}
+@media (max-width:560px){
+  .land-art{aspect-ratio:5/4}
+  .land-art img{padding:10px 10px 40px}
+}
+
 </style>
 </head>
 <body>
@@ -1243,25 +1258,27 @@ dialog{border:0!important;border-radius:22px!important;box-shadow:0 24px 60px rg
         <div class="head-row-bv">
           <div>
             <span class="eyebrow">함께 보기</span>
-            <h2>카드로 만들어 샘보드에 올려요</h2>
-            <p class="sub">내 그림과 오늘 알게 된 것을 카드 한 장으로 만들어요. 카드를 내려받아 샘보드에 올리면 돼요.</p>
+            <h2>작품으로 만들어 샘보드에 올려요</h2>
+            <p class="sub">그림에 제목을 붙이고 이름을 적으면 작품 한 장으로 만들어져요. PDF나 이미지로 저장해서 샘보드에 올리면 돼요.</p>
           </div>
           <div class="bv-side"><img class="bv" src="data:image/webp;base64,UklGRiotAABXRUJQVlA4WAoAAAAQAAAAvQAA8wAAQUxQSJ0PAAABCYaRpLaZAwU08+6/YCHj0EBE/ycAwAU9d9FS4HKHQILlTouD5IDY3cH2zYz7esqeWwdTIewpTnqqr5IyW+spswqZHlASjxElHVorNPfMVLAU3CuM1swId6+QrCdoYfYMYcv22jQ9ltf4QTxkV7TGk+7RBrR7Ll1bgzZvXZIOgCQBkjKG47aRHKmk/LMeUz1n/hExAUki4BZBjrLKpcfNPgke6T/v6Dyt2dPtwWl6s84xufGBLUdbfE9tksho4hDIhzs3jfxD2yUrL7VD1LaNWv6c7971CERMwAR40rZteRtt27b9vCRZxtDNzAw9GMQzhWd2T4uf7s3Md1GgmOJKOSY5suCSLjr3hlFwne2ImADbtrWnkSSdT7JlDEOgo5KLGbp7eOaS6anmfZspO0P/MITScR0RE5CBKtDAzmc+fX83lJPnT88gyJEVlyOa+1/89IPdvuajw6cfVciZGfesOEQ+/9Uv7TXFbk9NOTjcf/vDExBOSoeDdV//2l5TFXVNPTs/3N9/L7ND5J41o/rkd798vx8jl08PXnnpydsfzVllRbR9+ZPP7JUFV85PP3jp/U0NpnsFqkc/+fTz0byO1oUYm+L86F///dIopmMOW/7sLz8b5FUTJcB2U81+9bOHnZCtDUlU5/tByY2rw7///2+PcKk4WE3r1ciNF4vpvBZoXWAKRdfWTUQXBAZsefT3//vdXUxDUNw1Q3E4GKErjDnQr5oyZ30qFiVEbm7i5OH/F7dK5C56l8mJG0tZXod4B14Pzt/GIMftOn90Q0THl+Hvv3DKELcoJ//N57dmLcrjwbgK3LLR5HN3q8a6NV3mGxmqwczG3PZ0eN6VVk8wPX2eN41vCdN8+kEtbkkQLxPga8nN5imVuW03VX66baNVc8bTj6cxY4Heu7u1eVvm9kMTv5D3rFuDzMPtpiKsGoyP32LB2rnnebxESAhjwBe62x27KeYXgsAYFLN8/llCZIFi2nPN6uvs8YfghTS9nXkBEpgB5kptP/jcg26IsZycDc5Hec2lIXRc1/W2zCJNlXleodUS1fVbU2sxVq+pisi/zDKfbfQ3Op2OQmf7E3ezMhLL/Pz46bOjk1Fe1HWMTfSwt0kWF6PYIZ8ir5ZfP/owRLHY0NuYDWphtJv9etzrd0ImhOcvTkeFcVOX0+FoODg7PBh8fNwHjzr3CV6QN8jHzUoJ6osnRyGyaO1MD2cst+dnFxebvm7qqrEd47zmajdNOcvPTobPD//93374qX6WIRYrdxgPC6x0gGpZTKxFWfzmP94K23e2mE+medaRJC41YAECHOuqzMdnx2+UP/vpXeZmsZ8qI+2yyyq8BAePj7PZ+WA0bwDMleLaBuHYlPlp9ZkHnWUo1tuKtFW1gBYF1HkZJpVZ1saZWMaw2paJZWV+txxX+4IW4EvEsmbdUKUWdIuXwRiBdGHxBrQUrurSMry3w3KsZ1PZ1kpIhkREtBV5VXlMqZyAPs89ibvVJOzVMdhqNQutELIjArcWmNV2dEaLR2vFmlYTVRM6YCkV7qL2KiqESKrumNaO8ypjtT2fucZtVed1f8UohnVBS1vlpN5dufNyhtsJiol3Vq0cFVNae5qzsVJGxaQYopaqh7MestO5OJmflMLtYzx9Ue8gk3Y52R+KVvbpsBtY+Xj2+jPaeXaY3wevltUMHr41QW4b05wcq0NoVguYfPDkWUProPw919Fi5ePgtZdHtK6ao4dFLbPqhsnjP745D23TnD78V16LdVgf/vM3HwFuD0P++Ff/mrMmi/d+9cdD2tQwePjSvsN6kIev//oJuD3A5WxeWesByPcPW0XoE1/7/I5Zl+H+j78JahFz9wc/+VoXrQfV0/V3swJS1YaR+9GyzfZbTHMiWajcRQ5KThCm7afMranU4457Uc26ujPNjufJyu4BI1+23xPdzCD5Z9d1eoJ2F37ANDOC/MWHc28uverMgZhd+YuX5w4lBsW4+AbcDNHfXLVYYsbqs7Wx2gcXFy+u85iWzG0+O6KdzfLZ8x50CcrtnZnVUuX+rCFxt5gCRm0E2TgNSklYvr7KiYFWNrd6eN1idQaorl+MaGtjcfNyL041V08a1FKQbW92lpQfzidaS9BM64yzimzdzcY4tJVRT2dLLBVg545rrJYCsvXlzsd0tLXT0OpqH+wCSkQO/a2q3SjHVU662uyXoDbL+z6gZOj2atrdl6VINwTFNhPmyjpLRnQ7rq32AvPteolQAnIs89E8MPPjVG4OaSA6O32BZkw017v3OQkK+nt7exsScy7LVhc/f+KjO7rAPO7c6cvMfbl6+6xARwfTPNvMRPs3109G7Phc1eqq9YTC/tlVHo9NUG9uZqCWA9Q/eb0EHVnkBRuIBLTiwdMtR+/Wg7qDlAD4/mLKsGMSVp9PkElB0+yv1iAIaC7LIJJQhNXlRke3q1MBXDutOGpBs6zSQeVyEIKM0I0NKBHIhyFwzEazXiKThIKsW7ZYMYJ+v1IqAHm3GWUB+WG/zEjHrN+t86NywzQIJYLh6u0UKAbcYqxJSBeGTYGssinSQeDqPj+qrKh8OoC5UPrjCuGkAOd1VD5kJwbiiA05L1BCmNkRATJJaWJYLlIjOluuJgBOB2p3lkhuGjoko6VYN90lgqpOCaCp6v5S1WW9kRKxnsXtJTIxr3vpIOIsd5ePgZiXfXAiQD3NJTky2u05CVnNiowQrpEPD+pUsKhnTQ9BQD3NUCLAPFdgmUVsL2fISRAVZ6OOMGWLy4lJw0gznXbFMgvy1VGVDOWk6IMtwrtjnARmPKkzFK2DvXdm0rAejTdYdtlm68F2kFMgfzG9Ly9doX4vA7VffT6IHeHlQhSlulLbWS7Phn2yyJK7WDTdzS6x5aAZHTcZy+9iA1lP1ryJ/PhsB+LSAfOz8yxrOasaHjUZoVmFejxurJbjxYfDT4BZRdWTYdVtN0ZPn28T4mo40/Boktl8uTBuWxdFmjLq/abNmetofvfsJkOk6+o6CDRLVp4tNlvMpWMo/pB5k82SSfY9ZqRsBxV5zgwbfLw1MJJ2uHzoMkXNDRx8dzDkSFsmX41nRXQzY+JbL3skkjcr3v3xUpodzv/6u3BIzyj33Zcx+pkR9D/+9SuHEnOw+tBBZH7d1Y/edJYa5LtLzLLZEZbtridZYsYwfIeMWR6mVWEoKVSX30THPGeLviBxs4OXmGvnSFwoD3fMtQ+FV0py0D7tPwXNkSgvno6G98lEY+w+f2baOp4/fftgVN2ZkjDIqv1VWUWhdrKt6cGRI1oCEuX2eh0yWlxBTTm/Mvzxyei249Ay8+4E78eGqCOLyC3GRhZNrRaJ6gcvzI5Lzvug6JxoeQl3iGUOciTzeZ5luXEK2slVrcOVYiKGgIMTASwEczxfGZFmpq4jqSiiUIyAl0KqRjMHKRVAIcTCQiyhc6yrorJJSdPE0ItoCaCYzG2lBZhOdxaJXpQoZ5MZiMQUIZZVBVqIUDg+nTYkqOVqNI8Ej66PhkV0iuCqKMuGRQq2fxqVMikqRWL9otLAYcN5TUgTcAjls3FUuCWZUDcakarW/PnTI3RrB7VtgUmYcrz/DN+O4FBvh1wkrPB0uB11K16x2awbOWWAMPv8JtItYF8XY+NIHGv+hc4EdCPZ3V1Wek5du76/EX0LztQuSkmJA6H/iU9H5JvQxO3tjCR+8ClbXN8RG3V6SiL3tvrzWtcDV/eD0kjq3ZlNZF1DkV210xNKInd3HLmWIzyvO5lIY4dsL7zg+ot3HUgl4EHzDHRVZP+y35GURiJsV8MmhssE/YvrQDpLyroTdNV80sReQkGz5b9i/+7shG5axQ29FA4IEIxPq4CTKvjpVvxzYFaVMZDWwg/t3xyUvSCUVtnWs+zfvD3sBxKLkL28whyiefsggklpofDyJQiYH5xGRGLLrz4Ih7z3xXFhlFaiOXvVYoS4+6UX0SR35OySg2B3b0KK2XCeGZE9ChLc6p8skLM7RZViMPxoifPe9rBOMqtf94j7O2dNkkV3NgD375yS4op0y386rzCdXkA+OqObSoyT3LUFbtHlnOjqGqrGg04xoYtNDLk4zR18/Dw6TjXgcgc64bzDO050QeYBJxoQIzGS6Aab6FQDonF0us0K5g3pPi+YTcuYZoaDAZwelWkW8cvvZJx9lCMnmCg/OhHnBzNSfTzngpPMeFjCyfujJsUcGB2hbL4/rFIshvKNExAnR9MUazT++wtsRu+e1AlW+fzhOdGcv/JhYZxapQav57KVP373vCG56/k7+zHgwGy3TyYnldGbL5WESHBdTWJGUhuaP7wK4uK4urebVrj6+K9HXFnq7lZaxVD8+T2QAUE1i5O04vgX5yAuDcXZ9GmNnUruHP76r2TmcsXJyT8GUaSxof7Xfz4T13R9/KuXz1AaQfHGz/8657qiuHdvd5PoBHLT3f3kZ7m+UGdzd6tLSB4TMt3ZzmRdB2T1+qEGJQ6U7nQDMjeWinmNnTQxzPIxMjeXIc5PJ1FunCa2gyaPyhixboYlzY6Oz+aEDFupYQTx+Wu/rjKCuV2X44MPD8cVSCRoNf/od799tULctvH46P3XXjs02CCUAsZAYPrOaw//8tY5ze1JEJsi7G7VHhyAGQjQLBkMBAlmg2cfPHn8saBiaDJiFVSMiqdTHTLHrAsE0FTzs8HJk3dP55DxLcCGmJ+fT55eTbvtus4z/ZPNkC9ArMang8GL2Dk4k8DMJXCZ99vp7PzBqu8XTRlCIdmsGONqms9Gk+msquruXh9ALKUy2ajpun7c7Dbrsem2m4hmRFTHw6KczfJ8VnX29vqAMuHlACOZAaEbh6Gvups3Xzvm1OePjnI6ndDrBUCSbVbSOe9cOP/RbYPZbGTZ+Enu7uZGR1w0ZvmFMONf+qt2nTMTJmztZgVXBjBmVYWQ7N6dB3tdgtpAjN58fEjIIsY0rMXQ2b4XKrDWX5x++Gi/gcg6VQxZURjLWmdGcfrBw/fmgNeLoZiVRRWE0ZqyoBm+9+j9HLFuraya54PTsInE2o7F8ZsPPywk1rCbenz8gbc6znyJ1ogvq8aHL7+yX7KmRZW/ObTpSgHAa0MAscmP3n7l72eA1hMSx4fHx6OiqNgKYp3Gej4+23/86uN9CHhNXVruHj59eH62b/Ii83JCAgz4gm8iwNfRNQwYGzexLovxaDSahh0BZn3LQNnsz2+e7pdDW4RMWeBilLGN8WW6kQWgq4CIHWNsyiI/H45j/05g/UtmUHfLoRvaogghABhFg4ky1xRYmMsAHHQNY2NbkG3e2RUQ8LoDCSJAXYQ8hIgwgFmwDaALumAEFkGBiwq4YekBAFZQOCBmHQAAMHYAnQEqvgD0AD5JIIxEIqIhFai+rCgEhLMAaGUnv6rsZOXd7/u37k/3T3mq5/Xv7Z+s+XfrHy+fM/2v/sf3z8wPmD/nP1m90P58/8n94+AX9cvOq9UX7qeon+n/4X9rfd3/4H7Ve7n/BfaB8gH9E/0//19dX2RP8f/3vYR/ZX04P3b+E7+rf8j9yvga/aT/zewB///UA1UvR3xT/IPsv8vtmGp38w/Cf7z+++n3+6/tvlL8i/9H1C/yD+hf6zg9wC/pP9o/6XiN63N7F/0uVg9B9gb9C/937cvpW/zP/Z57Pzf/T+wX/Kv67/zP7h7XntE9C/9lEyoJUnAUS3518arnnwSkz5vherJyHAd76RDZemLeX6F9syBZd0htwDsr1k1poziUmdXVgo3NedyWo5Ul48eEh0WDcJH8wDMV7l7h4UTitp4xN9LC6YdAGr+s4onBoRjYEYHmI2UslOIvcgcALWf5GSZXWKK3wzdcdMBW254W0SfV16T7E21yuVTNYd9lanOVeL567n5t8Qv8uyfgX5BRwmfKY/7DfWRVt98msXzlzo+nHCtGISqepgQ4XUyaWFE1SMe6J94KgJhJmvziVtqq5FvkqzE7r5DPlukLrXrQDfbpjhSVnhkYxp/rf/ldLZHHU5EnIzl1QgYGCl76L6D5RrEgWUicjBqQQ0nuXaZhCWW5kCVMlcu+RgRBkS3sM4Z636TKrGMX1K0P1UcPPj4GCrKR3ua6/t539+iN1TFOXwjULBKfH0K/1qYraz1AoUA58zCDnhxKKf66MTsDCkunqmWLeDO1/Dyb+RST72/Njk3q+9s02TIl/9eDOOKUp92DK2qe4g/KVVnSedDATr16JchkuwG58uzLNW4v0hgwnH6dqcNIFUE+ZXMJi/Y+2iv843bp8pLba0J6K9UvkLFMdoQ7qgHLXgyMJy+56eJwxW5p5fz9+mvi8Qb+Srv8oVZ1fLrIarPh539uf0Yk2Uca9GEh8qVMWN5S58r2C7f/RFyZNrAcLTn0EvdtQh5BeO5AYZtCydYudmCpfbr7wn1OsM1dviGxd9n/zdTzI/RWpro2atsAutj6CiaJ7e2vnTyC1oXWjmJto0606dENKJs8D8ec9BSOPtNbnst32XfgRDkUdUkrOXhEbakaXbh8gOx0stGxBv9a6vQZPIuCyk5V985CWfFe1/Fx6lpz5Qe8O1704ez2LWGo8jvtaOLfPjGSoljqPpFo+L6PZNjMsMjVWe5D3hRXiOOmNbxLL1IWbjyXfd8AAP7+fJZ71qCTd3hqpTac1MaWst13d+mlIgqCgsASS5rzz6mZv6kVaZtl6kcwjgCZ8YE2Bu1bsMFXfUVC6u9gOv13cEnmOmbQWIGigmRWKtLPWaLrB/f6zfKQBoXEkVEy3LeHeNQPGgrOy/qF00H1yzqyYIoRqh1Ka+lxKb0SdNiJm8tSGqrXdG3DM339sMYq9i0T783eee1Uyz5wgzZH0aLEtm52QyWFqgEjlGBdf8rke5yZfO8yDuR1SU1FBpZEdbWsTXD9AFYBiKaZpuwirDNdaUxrIn2BxzRs/vJ/G2By59JrNuz8XuBSVhAwb0dZxJc7C+4TikWvRGiwa/GIDv3pNjV+eRoyJOVoBs1slDN59z7xX/LsH/szBXayAea61njZ9We46sVXLFns7awdpBOUjnQYRWwKZp5vBH8lkzGu/xBG8FoTVOCrrziLxMU+/wD/A8OZvE2Ax98D5qAXZvaNfNJh37ZhEXPe3L4lj0VAkNiJ4gt3OBrbedTxPNtwDQlxd6zZtzuhmI26vaNqHLDvT4X8j5zrwhChiADb7HobSM3r3L+PHR8zb78X4hGVUQbhXOd41Ig5/2e/iNcdg5SFmnJ9a/l/Dvs+F3pMZdvuvxUXdwj4NMaLVzGy9EyubYdhObhrXNMpEIMJIF/gXNFMzkB/kV2UJE20tQV25fdEaLwYVROco2W+5zYp9rmJsoleDDVDF94tyCQBcoXtuv1VQ4mzcfdXJX4IxYZFHcDi+qUNGEivwd65XZqIOPBQPWnry+0tNiQCdHd87rOc7pH1xPHmb8+YG7gBMOSmfURyCiMPHbmThXpG50FfkB+PlQkFIYOAdOf/mBT9VHmJEYDgO7APj4PKtLkw2efEsvhZNV12hMZG9Ub9zwVUvjBRgxG0EYRGyxYySVGlemonmKAT0ahGsgIAau3R4pQ2ll8EWWIBwReIulWDJLMHktP2XPm2sVlSlrcisNCaA9QWCqHwdl2LL09m+xtTldOuLxF68E/y2luGNXtMOjRy7eDoZ73IffoaGu8DudKPP4Utdf7dah/OsjQ8EshSmGkE9Vi53C2geZViwoDRQ0vd/fSWtITf6Q7aqWGwRK7V88iIpyZJZMcNNaoDuQXUTx7v2GhNm6zPPIrAxYMFUspJHnEEv8LMs8QUc+eATfd9P1o1YpDhfzf3IKrkT1RX/xP9ySsj4BRCEExydnlPAKinFDJPaPx/BwpcufD46bZQjinlSo4BgijAO71AFyt7mfVWceje5xZoezs51VAtl/DpManMDJ2MJrYopm9LINuYWOPuyYNz/ypBTpxa/ZM99f//rCiJ+3w4r1I/3dfZ9H4l9NFBHGXKljRV6eKcX/N1zRqJ9U6BOHYICSLrBHFophIqrFytNJ/CIiOjeX5eP0INh9eixr67eiWSC7QAWLkQ35oH5wmdRh7+LHh+adW5vfkCiygt/Orjr1X1rm0+/ZE+edm0sfhPMp8L/tF1qpBT5ylbYjak/0X3VM1WfmFeOEAITblXR67UQvsUL1Fr4NHQwE2y+Kzg5S0HyuScqBxKoawkK0oYtZvTv/Et9WiZ88OHabBEGuykJPqZzU1aZ+PfQgAX8FqfK9tvxpz5CoVo1vxLpNh30aBNe94UAHYM20VCkBGnLMxFqjzuK9qaMv1bbB11kVCwYspJaQwMDSK6kvh63ineM3wPdCftIJBTb/tIuV4t9dMBra0iTDVNqd1oEw5OKaYAce9N6ZfWFmZQ9hNckpHmPFxcwyuDqAamUBeMkoWu06r/8infYOFo2+7g/TJP7nn2Z76/Mky40O+z2smxEH8jtSQPDpktWU9A/HEOhtQFmNEp3/AHCXJ6rj/RPgb89d0xTa5Uj7QidNvGMPck/udarE/gxXQLRj+DSJQR2KQK3ohh33blmX5g3dvs+cvBs53wa14lJ/kxpAQHU4yO+e5mmhQ/yTXDfSMjn3nuSDw/PNPktwvB7VEDRDCp4PFxIM3ZvU2lbVSjQIrdwI4HUAELVOBnnLBai76/ZQRyR6oLALUQgRAk7qlpD/Sz/CYkALtroU+R0Qm3sWS+GNr1MrQj+qapqbQ41/Fkid0/mD2Tr129JsHEQm3Y7zB0TBteuSVLgIhGD1NVnhHRLJWZIoTxrvT8/AhaLdXtA8w6FGIm1N328wsS3BJrS1KTjWtIsUvgyWZiUOfyWP/ekH22avyFuWlBr8snQlzZIq9aMEgj3/4shwJnreGt20/4xjY7mY1CS9gVxbK/686G+QWmLOa7kqA2d0EvJd+XOeK507J32x6VOwbP5waQl5DV9RrHs03Ct2E03YGl76Mmfv2W0m4fTt316XXMA4o7/1nDeMqAeEY6R3zkHpKb4RFXiQXn3xc+npv0DE9OkGk2Yci83gJH2WQZSPDrgT9thE7uqh6WDstKqdV6EzXcpryTXu22V/TKcbocVTmhdJ28c2jVvbf4rDou1nzQQiNWXBuHlFPR8N7XxmX14aMWcxow0dHg3SjZsyCFB2YgiCsawsbZdbGjYp4gR/4HLuL2NBbRkw84BIjVxy58EOdQN72WakN+STKEYO3RwhDbrsVAdv44FYI9lJWtMiLOnfAelhzs+911VAql/g317B+EIewUiaa+gW781hFsF0zife69vq8vzEbjesVGt5c0cH/A7GV8VbKzW0wxN/hxvtkPFkmCHaNM60PHPWfLQPF+CWapm8dv3H8bPR+Yx24v3SvgAmoTgRKcDB2ckbB2ANqvcZ5qT9546/IzEXaQBjWPsIoXip1b0kLWvozCKugyIxp391EKjpWUjTAZmslJvZ37/YRH1ZrEcVgwveqrAkqArMeZqOMEryTkRJ6zKTDu2//gIfcYB+W0HKopKMJ+8uj71caY0KpP6LcCyBHD0QgioKStghOJrw4TxyQVnt1CoCasE+VPmp6lUf59h7MvBK7rPTQ0RFyUzzuSJrt5OxmfFhyE2Hf//oE1MxyNKMOTqCyXX+poc4GTzpKuIBx8P55KH6yslQlSMG3jrnd/p3+tnJRfc+/Ptp0xLnWeTteQj4XX5gcA/yVfJszh18cJJnPTRSx1+TRLV+a180N2vv/mBJHVN9cA0EKWKCQmYdpiZ/H9dweiC5hD4z2I1kdTNEAWZAOK/1VDrPFsZp2mHQ0vCcyZ7uEPp1FcdijIOsjeU2Ad420iA4xy/48e1mFmToJjYn5wfy/OA/5NxgDjURrHjPsH77AzwrFBznypAxQVLTi68V/bo1+fKG+wQO1ByOe0X82MyK8hVvmnXGupTs3w8TI6ojt7Y7elIBsx4JHNu6kpYucSOYGm+6Lto6zAxgCqC6Rw7WcwaBnhmTmIC3R7ze+x3ShaTVAXTGl6D9VLMFRAWuKQAI9ES4GXnLDYwBpJS0DPxwQzsm6qUncc5fE/2IeFHFXc/gbY5StH4uGPcAtUWDzVKHB5gk/x1phRaG36jKS/9eZvXg63kvXFuN8B0nedLEl4bm9rGdzTfxEVM5Tl8MsdPf3G/CkZEAI4AeFwnYlukWvlW2rbk7EBPSZOezxe4CmL98cmAAvK8lOHkbWFaP9TJ8LgpwlAueSifQ4wRPVsCSW9F6rCUsP8ESND+JAYCCfkIHkOBqx6M0fVjz/P305A0kFQIjQqxTMtCgbJKRtWV6JxbWb26H/DDHj25y4KgtMo20A1+oN+MsWg1XqLcsRQ+PchJ7equGUPmt2iQ4p/dVrDQHrzJ00CgzZ4drGTWN2PToyc7ZEi4oJd5ugPbEs0K5+NxROZ60g9ihLFmOIQlV2LK/33mgDhCptn2fS7RVp6S5lLLQ1KbO5SbmoC4pl199//DiujLSLgPyFypCndsaaU/WO5qs82wPrYf2/EVytydceRgsxrBWlkwa7OO1B2ocpl/cUIfUbp11ip6zjTEKMrMHR6xbAMaK7xRlRGbiEzXBMGh+1FXG3aR9WWr0Qi+pMib/0ke1lycM/2k1SiBfXCblHTfvBaO5qRmS7FI95Jei+kwyJJ2mitbqYhUKSGpjuJB8uPy7h5wf2FRyuDybXwhkXOAsymneHCxdqMClz3ZnV21BoJK2k9enNiSL7HYGMP7qfvJrXTaFOvQ7xN42EEti+VGMIBtKwqWJ2Mifdm4TdyT2N9KYk6vyynXsQhbqurRvRCdXt3CTzF8pfZlmCXCebP1N/+Ll3n2GT3Lndzlked0gvs/Sw7FgKoBHS+aeIEokB9fR+puYDd+zc4ZpcV69Y8SrF50ETKTmVnke58vbeqk/h5EkrMlz9Xv4OLbg/QsKkFcqC5rkFbD72/AEoUYVhBoycdbaDP5CGxlDllj1oV97aZGCx1hais3MYtIZOOGbfGcglkX1z4HowD1VhC8XPJ1rjydRcpqPEwmBexOOMJJwg78VHsASjY5CQpm3AFcwrs4HjiFPQzk0fa/bAZLrCavVofAxVef56EOoatFjwEl605eLnGIsuIjVyqy2K0BzedWQ5AM/esuBxOkynEIsNjKGyXh3tdQS+2Osiy8dC8kEoZpT21OpLZgTvR3jy8Lpgn/UqXk3S0R7ZDYblM9/4sHkhUCY7rweFloWXMmfzydFFQBxaVNJv4I4o6pv+F72rEf/CwogDunimo/1LISSaKNbAWkjy5pbu44+XUOcVF2yx6HwVuZcPi9+WB5bVIIB7uD/N2kDs55/zqZ2CdWGS0XIPiNilxbwP4QkoX6VQcJaXZvy44OikSzXkdpS9o/Evxjd1oJFQXZY4wz+a23Fk7HfO+6lITPo4s9lbUsia/E7IQcvQWP/xJ6eYZsGhLoNDYmCewexO8MA6YSXsYzAJGrZ5giADp+roMhegdomBbDsuwrMAbYzKqbKWA9B2nnMfqOv+8BU6K2PtCptfzMN+pvVR8hJqirckbpe+1ZFdZDcj+qzrhWuq5AmIqGLm4g+fCqS80w7nkaMbKuEbcZM3PRGY6VJjUiTl3Z8g9CqeBG+021EVbebXvp6We6TwFrvB3lRcfJdfOKGpqR0dEzTFQwixc2g827HeKClyRXc5//lhmn1DvzZxwvfIL187FHCBA808c4JVyXYyl9f2Zo0N4Wpk9r0TEjRKphyGXB8ZnXlotnShAci2ErGbdVCBCApcTGWrGqisGSXAjouqP7ReaMbfuy8ySb5KSI0d8xb9fcFhsBjkpFZT9fCTssCTNveawU7VXIYv74HJ99oBicoPDDSPkirtVPo+3OGUchB6QmjSFRu0xqeSsjHbXuPHRM9brc5VOLdgRDjGLkAcC/+5lZzy8rMTcagSp02T0hQvbFAXuUlKX3pLkFalhdhXfjJ3jLIVQkDGGqIIGtDFpFy0R+qhhlDgO5Ttl6c1B9hhm7ZLRuTP7TJeQM+tIea81p/HF0aPKDPIu9BmErqIg+7p0YgbS4lIrl453lB50jMZ0vVpbqfKk2+y+2ndQe++EPwuHh+iLFrIFPM8yBbVz3s6JlBoCEf4x5Dm8M7XGmaF2qEZHyTJLqtatXQW9oGTN6ndPCwCwThar/pLZhg9eAk8VZgonhdNsv4LXtW7qCeUEInVRU08Hnh0z7wmqAK8Cee+c058Ji9cTyUsrQgz1k9nUkx6NZvGcdHPrfMzG1TwD999bJQnpewEfxgQvU9hhdZ6IGaHEC4Rv4gkJ3zM/vyjviWo+iinryvjzl6P9fC4py/VSSeFu3EwIE9lr2+H8S75QDcrzqvanHVyQuRUJTYX9ZSVV0sCi3J/nk2l5+5567P947ZRGqTuIpD0iVKltEI3W/xhAL4+uW3wi+evPc7w4h7JIT08STkHeq5BKMn955/YV4JNYwoes9t95+Doi/MRiB58c1Jsaqg4XilAN76rHNgPqsh3YYgPDD7Oh8uYoX28smg4tLW6vvDFU/XDll+Qa7vonYlRSrZ9cYPYKfndNyU0dzU2flJ8XNpmIH1SOlOiH4k/qIAFfnljYZOC/glnDHFoU6DvgPsni1r9IOtFGknlyrFjhayGxzNzgdRdWBuCBJVoj4ztQXaIMV5cQWvdE6awTpykWtXEcMBbXyTbYq1IA/0Sn4U7SJZ12w4cYgWklT/8w+CsBKeDyQ25/Xazt4CCsLGi68wEHpZQMrRemV4A5YnfbvG/lfvuot0/nNt3q+Zayns9FkNayheQEZuGZPW0QYPDmIKi06LKoTBN9RBqTzVaIay9KG03nyqnrc0XYkfk+4Zu2Ck6/uiRRscyfMQH0KxpdtRHojLkzzgQwVSPHrNWoi4QQl/vrwJj9IN1qdA3WY1uf2apHOglK6PVR8grr7eDpxckcRLenjB7Bi05w0Y2/4QB4NHxX40pIKHPb2irX0xKBu2DtuDox1a86qhxqEE9QQeVWQ8GA5koWqdzHsLPFXZ9PtOM/+m4rvUfTIud6AsmUiJc7n0yxAllDSKgPhpDp9boU2HQy6Rmu7U1IJ/O/Z+dIyM/UKEBa6Xl2i518d9SSemoHQZm/41ARd5bTo1dQ/Kopn9svfUtLSOkbxVd3bTHyzSJzGlFkfpSLaP1/WEDURrwjW1mw7xSdUyL/pcqX4Y6df2PLahHHIOD/r/zmOSH3VcGhHZIKe9CgvFmPI8b0eMz0Uwcn30v8itfyJ//tS5x2mpv6rRr6nzcTZjbKnVWd8pPWhPQHfTiyPdnGjyBiCz3/ulScZ8etg5C4Cbk4vLGy6t6giC8h/NuLObdQq8Er8cq7ifDSsOaRCepEfsStPQ+KicBnDdA4M+dFhTWSxmQ6ySwh7AiEjTcU+9mRnBFlR6rH7UeHP8U3yZdnUaUO8Ob9t9NOoCxyJaidRypMzOL5MJrNKI60rjhvbOdQmkrFVZD0Y9dki8LRWQHPK5OPWt9zkfy5UWwHVbZAxfuv4Y03Q1D4NuLmA4fFKqRvTa7kWZRe3YBw6HwZ0WKb6Hp+/+ifPsazvkM9lWOyfyaT/cd+/KshAfSTRM9KUf656sTbO4wmNqgCdpWy63vIw0lJo43gtRWnGjBSjETvaXK+J4pKlIq3yC3x/n+XJOi9EEmgxqhHYLfg3M4F20rIBwUbT7tGzQLZ7qWMftyvMLWFFhSWRsCO5UC+BnOnu537AD6bBb5jA399JgOM9EEacXtOtPN6OhUtoq9NdqGC1hTzBCI9A/IaC5ZTK/y+lzY/xDEOy9LEK8rkUj18TMNv/qKh3sYIEnkd/6PxqnAt3gy8bteIcovEc9dthCmX3rgoGf3wpdvkVBRx4tgyLAgfcDsCCv3oKnZXKRAurcH4gM+Lsm6BUdfd5S3UHsdCcbm+BmukR7hJjtNIF5SrICLehhdy5PiT31tHEhnPvr2N6BTSRrqUsK+fc46dILLqEmt2bU7pZeBQPDALTWT7rAw5eRbMW9uFfRXulmp5ItRnbXialvzp76KKQuKqNebX0eZVRvltqZiMt+f5iXGokuaTW50sbwIf4sPyBzwQAX9N/3T2kCsi3jBCygWDtOFOTJKVM6zyVd64SLTvfwiSj++OZomYvs8MvL26LGanASVrER3kMyzEMUzsOIaJrdosOvPDREbnrrht6qMCqinkobr1eSVPNL27R+dUg/wwGtNRp25ciTwPY1QkjSQHhmj8CwOGIWaag2boF0Fcw/qXSyHoY0OSpt92AiblFkiqHQVTVeAu8Yy6y7Adaej3gupuDzzRFOpfj9Mnywzt7TlyHV3dSrjid6YQsaK9LrMfkkeRDlbIlYjBEiv5qBOxShpt8PL1gemYqyushpjzt6pEgYsvjIPm1lMSeM9uGSCYKoK0pmz0dj/J6/OGS5c5mg8bydLLGoX9oy3za7FrsMWcVKruZDntsEjpmUjPEcT4X77+glYLWikCTRR89HxkdM2/2p3/dl/wSXi1Gi3Bni3eDwoxiB0FBeIaoZE/LLf1afYKezoIiQiI/fTtxGcGaPPHsUSJF/VZt62p/ADJkVeC9cL5nZ5VhAUBbga4PYxIZrsjHnPqbfem+kSK+jVvb06nDMG27dQIxPqFDFp2Ku4ZkcGs+kdjgwR0/Q94oKJ/nUsTzgKX3OMUfpgWc47BOjQM7Jtr3Jhn1QzNmH45cDHqB6wga18Pu7lB4QOkoWzODp3cihVQttYOnZGTcLMGy0UCCYauLK3lI8+rvn90Lk/m6FKaHuqjimYI/Xvi9Sj8P3K/1pZTv9B5vANpb49pM9GV/9nV5z6heiOseepDuF4HcvVb3W6ffHtxCPyysl1l9HIgG008LpO7XEdzFH00CquDw3YWkEQEKIAqqokQIkESIdgcASeu8T5bhswr/7bbs9/32TTtIJo5LrEnZOn71TBph3zyFUmQXWP8A2qdsS27JJ5LAC1vv6V8i9l/jvzlkzTW3npvFMT7X7s4OK2nc+XFGtTm8X4uES3JfjLvsDVpEsZIvTVO+Iqz7px8mgB04429w4hCT+5C5g5Z9p0e3Z52ivTCFesf/R02IhXryMQjrCpaow0so4JPKOqB67rrwVDIKbcUjLYtsN4M5lBq5DY4Oyhb4pASxwKSmmdmXRegkzvE97vft3eMHaxuiU9SbMYJycCsiwBJHd6qXXj33UMB+8Iu5FC8mjVEBncmASLtzpCfyWl9/lB2MhFAauYLBZYkAAWzHjQHczdz8WivFSf/n6dhtth37N63sFGEEWUsI8ZpD34mD0zWntDLB80zHnp9hHkBlOPRGmOsUjorBUfdEl3CYKKhKHqX1XyyCWZye/OsJpTIVKnK/KtFvbxvkoa7DOkkFoDbFJSW4kH+o2U0ahW/mPUt/OQh9vb1VCUNg/Hzx80jmC1xWbDx6umH/xxUYIgAAAA=" alt="내려받기를 든 비버샘"></div>
         </div>
         <div class="board-grid" style="margin-top:14px">
           <div>
             <div class="card">
-              <h3>카드에 들어갈 말</h3>
-              <div class="rec-row"><b>내가 그린 사물</b><input type="text" data-field="cardObj" placeholder="예) 내 텀블러"></div>
+              <h3>작품에 들어갈 말</h3>
+              <div class="rec-row"><b>작품 제목</b><input type="text" data-field="artTitle" placeholder="예) 창가에 둔 내 텀블러" maxlength="40"></div>
+              <div class="rec-row" style="margin-top:10px"><b>내가 그린 사물</b><input type="text" data-field="cardObj" placeholder="예) 내 텀블러"></div>
               <div class="rec-row" style="margin-top:10px"><b>빛이 오는 쪽</b><input type="text" data-field="cardLight" placeholder="예) 왼쪽 위"></div>
               <div class="rec-row" style="margin-top:10px"><b>한 줄 자랑</b><input type="text" data-field="cardBrag" placeholder="예) 그림자를 살리니까 진짜 같아요"></div>
-              <div class="cta" style="margin-top:14px">
-                <button class="btn" type="button" id="makeCard">카드 만들기</button>
-                <button class="btn alt" type="button" id="dlCard" disabled>카드 내려받기</button>
+              <div class="cta" style="margin-top:16px">
+                <button class="btn go" type="button" id="dlPdf">📄 PDF로 저장</button>
+                <button class="btn alt" type="button" id="dlImg">🖼 이미지로 저장</button>
               </div>
+              <p class="hint" style="margin-top:8px">누르면 오른쪽 작품이 그대로 저장돼요. 샘보드에는 PDF·이미지 둘 다 올릴 수 있어요.</p>
             </div>
             <div class="card sand" style="margin-top:14px">
-              <h3>샘보드에 올릴 글</h3>
+              <h3>샘보드에 함께 쓸 글</h3>
               <pre class="post-box" id="postText"></pre>
               <div class="cta" style="margin-top:10px">
                 <button class="btn alt" type="button" id="copyPost">글 복사하기</button>
@@ -1271,7 +1288,7 @@ dialog{border:0!important;border-radius:22px!important;box-shadow:0 24px 60px rg
             </div>
           </div>
           <div>
-            <div class="card-preview"><canvas id="cardCv" width="1000" height="1180" aria-label="샘보드에 올릴 카드 미리 보기"></canvas></div>
+            <div class="card-preview"><canvas id="cardCv" width="1240" height="1754" aria-label="샘보드에 올릴 카드 미리 보기"></canvas></div>
             <p class="hint" style="margin-top:8px">카드는 내 기기에만 만들어져요. 올릴지 말지는 내가 정해요.</p>
           </div>
         </div>
@@ -1497,7 +1514,7 @@ function bindFields(){
 
 /* ============ 이 차시 설정 ============ */
 var KEY='art5-light-shade-v1';
-var TEXTF=['school','klass','team','name','myObj','angleWhy','hard','cardObj','cardLight','cardBrag','boardUrl','oneLine'];
+var TEXTF=['school','klass','team','name','myObj','angleWhy','hard','artTitle','cardObj','cardLight','cardBrag','boardUrl','oneLine'];
 var data=load();
 
 function onSlide(id){
@@ -1942,6 +1959,7 @@ function paintBeforeAfter(){
 function updateSummary(){
   var el=$('#recSummary'); if(!el) return;
   var rows=[
+    ['작품 제목',data.artTitle],
     ['내가 그릴 사물',data.myObj],
     ['닮은 도형',data.myShape],
     ['관찰한 방향',data.angleSel],
@@ -1960,7 +1978,7 @@ function updateSummary(){
 }
 function postLines(){
   var b='__________';
-  return ['['+(data.team||'모둠')+'] '+(data.name||'이름')+' — 주변 사물을 실감 나게 그리기',
+  return ['「'+(data.artTitle||'작품 제목')+'」 · '+(data.name||'이름'),
     '① 내가 그린 사물: '+(data.cardObj||data.myObj||b),
     '② 닮은 입체 도형: '+(data.myShape||b),
     '③ 빛이 오는 쪽: '+(data.cardLight||data.myLightDir||b),
@@ -1995,7 +2013,8 @@ function bindBoard(){
 }
 
 
-/* ============ 샘보드 카드 ============ */
+/* ============ 작품 한 장 만들기 ============ */
+/* A4 비율(1240x1754, 150dpi)로 그려서 PDF로도 이미지로도 같은 결과가 나오게 한다 */
 function buildCardCanvas(){
   var cv=$('#cardCv'); if(!cv) return Promise.resolve();
   var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
@@ -2003,128 +2022,229 @@ function buildCardCanvas(){
     var sh=artShots();
     return Promise.all([loadImg(sh.sketch),loadImg(sh.shade)]);
   }).then(function(imgs){
-    var c=cv.getContext('2d'), W=cv.width, H=cv.height, pad=56;
+    var c=cv.getContext('2d'), W=cv.width, H=cv.height, pad=Math.round(W*0.073);
     var F1='Jua,"Noto Sans KR",sans-serif', F2='"Noto Sans KR",sans-serif';
+    var sketch=imgs[0], shade=imgs[1], main=shade||sketch;
+
+    /* 종이와 물감 자국 */
     c.fillStyle='#FBF6EC'; c.fillRect(0,0,W,H);
-    c.fillStyle='#9DBFA6'; c.beginPath(); c.moveTo(0,0); c.lineTo(W*0.30,0); c.lineTo(0,W*0.17); c.closePath(); c.fill();
-    c.fillStyle='#DE7C5A'; c.beginPath(); c.moveTo(W,H); c.lineTo(W-W*0.30,H); c.lineTo(W,H-W*0.22); c.closePath(); c.fill();
-    c.fillStyle='#4A4036'; c.fillRect(pad,pad,W-pad*2,10);
+    function wash(x,y,r,col,al){
+      var g=c.createRadialGradient(x,y,0,x,y,r);
+      g.addColorStop(0,col.replace('ALPHA',al)); g.addColorStop(1,col.replace('ALPHA',0));
+      c.fillStyle=g; c.fillRect(x-r,y-r,r*2,r*2);
+    }
+    wash(W*0.08,H*0.05,W*0.42,'rgba(157,191,166,ALPHA)',0.45);
+    wash(W*0.95,H*0.97,W*0.40,'rgba(222,124,90,ALPHA)',0.38);
+    wash(W*0.92,H*0.10,W*0.26,'rgba(169,198,203,ALPHA)',0.30);
 
-    var y=pad+74;
-    c.fillStyle='#3A332C'; c.font='42px '+F1; c.textAlign='left';
-    c.fillText('밝은 쪽, 어두운 쪽', pad, y);
-    y+=38;
-    c.fillStyle='#8A8175'; c.font='400 23px '+F2;
+    var y=pad+58;
+    c.textAlign='left';
+    c.fillStyle='#6E9A7E'; c.font='600 26px '+F2;
     c.fillText('5학년 미술 · 실감 나는 사물과 풍경', pad, y);
-
+    y+=52;
+    c.fillStyle='#3A332C'; c.font='54px '+F1;
+    c.fillText('밝은 쪽, 어두운 쪽', pad, y);
     var who=[data.klass,data.team,data.name].filter(function(v){return String(v||'').trim();}).join(' · ');
-    if(who){ y+=38; c.fillStyle='#4A4036'; c.font='700 26px '+F2; c.fillText(who, pad, y); }
+    if(who){
+      c.fillStyle='#8A8175'; c.font='700 28px '+F2;
+      c.textAlign='right'; c.fillText(who, W-pad, y); c.textAlign='left';
+    }
+    y+=34;
+    c.strokeStyle='#E6DCC9'; c.lineWidth=3;
+    c.beginPath(); c.moveTo(pad,y); c.lineTo(W-pad,y); c.stroke();
 
-    y+=30;
-    var bw=(W-pad*2-20)/2, bh=Math.round(bw*0.70);
-    [['1단계 · 밑그림',imgs[0]],['2단계 · 명암까지',imgs[1]]].forEach(function(p2,i){
-      var x=pad+i*(bw+20);
-      c.fillStyle='#FFFFFF'; c.fillRect(x,y,bw,bh);
-      c.strokeStyle='#E6DCC9'; c.lineWidth=4; c.strokeRect(x,y,bw,bh);
-      var im=p2[1];
-      if(im){
-        var rr=Math.min((bw-14)/im.width,(bh-14)/im.height);
-        var w2=im.width*rr, h2=im.height*rr;
-        c.drawImage(im, x+(bw-w2)/2, y+(bh-h2)/2, w2, h2);
-      } else {
-        c.fillStyle='#C2B79F'; c.font='700 22px '+F2; c.textAlign='center';
-        c.fillText('아직 없어요', x+bw/2, y+bh/2); c.textAlign='left';
-      }
-      c.fillStyle='#4A4036'; c.font='700 22px '+F2;
-      c.fillText(p2[0], x, y+bh+32);
-    });
-    y+=bh+78;
+    /* 큰 그림 — 액자에 끼운 것처럼 */
+    y+=42;
+    var fw=W-pad*2, fh=Math.round(fw/1.5)+56;
+    c.save();
+    c.shadowColor='rgba(92,74,56,.18)'; c.shadowBlur=24; c.shadowOffsetY=9;
+    c.fillStyle='#FFFFFF'; c.fillRect(pad,y,fw,fh);
+    c.restore();
+    c.strokeStyle='#E6DCC9'; c.lineWidth=3; c.strokeRect(pad+1.5,y+1.5,fw-3,fh-3);
+    if(main){
+      var iw=fw-64, r=Math.min(iw/main.width,(fh-64)/main.height);
+      var mw=main.width*r, mh=main.height*r;
+      c.drawImage(main, pad+(fw-mw)/2, y+(fh-mh)/2, mw, mh);
+    } else {
+      c.fillStyle='#C2B79F'; c.font='700 30px '+F2; c.textAlign='center';
+      c.fillText('아직 그리지 않았어요', W/2, y+fh/2); c.textAlign='left';
+    }
+    y+=fh+52;
 
-    /* 한 줄짜리 항목은 같은 줄에 */
+    /* 전시 이름표 — 작품 제목과 그린 사람 */
+    var title=String(data.artTitle||'').trim();
+    c.textAlign='center';
+    c.fillStyle= title?'#3A332C':'#C2B79F';
+    c.font='44px '+F1;
+    var tLines=wrapLines(c, title||'제목을 적어 주세요', W-pad*2-40).slice(0,2);
+    tLines.forEach(function(ln,i){ c.fillText(ln, W/2, y+i*52); });
+    y += tLines.length*52 + 4;
+    c.fillStyle='#8A8175'; c.font='700 25px '+F2;
+    c.fillText([(data.name||'').trim(), (shade?'연필 · 명암':'연필 · 밑그림')].filter(Boolean).join('  ·  '), W/2, y+10);
+    c.textAlign='left';
+    y+=52;
+
+    /* 아래 칸: 밑그림 · 기록 · 글 — 비버샘 자리를 비워 둔다 */
+    var BV=Math.round(W*0.135);
+    var right=W-pad-BV-24;
+    var tw=Math.round(W*0.21), th=Math.round(tw/1.5);
+    var colX=pad, ly=y+14;
+    if(sketch && shade){
+      c.fillStyle='#FFFFFF'; c.fillRect(pad,y,tw,th);
+      c.strokeStyle='#E6DCC9'; c.lineWidth=2.5; c.strokeRect(pad+1.25,y+1.25,tw-2.5,th-2.5);
+      var r2=Math.min((tw-14)/sketch.width,(th-14)/sketch.height);
+      c.drawImage(sketch, pad+(tw-sketch.width*r2)/2, y+(th-sketch.height*r2)/2, sketch.width*r2, sketch.height*r2);
+      c.fillStyle='#A99E8C'; c.font='700 19px '+F2;
+      c.fillText('처음 잡은 밑그림', pad, y+th+24);
+      colX = pad+tw+40;
+    }
     [['내가 그린 사물',data.cardObj||data.myObj],['닮은 입체 도형',data.myShape],['빛이 오는 쪽',data.cardLight||data.myLightDir]]
-    .forEach(function(r){
-      var v=String(r[1]||'').trim();
-      c.fillStyle='#8A8175'; c.font='700 23px '+F2;
-      c.fillText(r[0], pad, y);
-      c.fillStyle= v?'#3A332C':'#C2B79F'; c.font='700 26px '+F2;
-      c.fillText(fitText(c, v||'—', W-pad*2-260), pad+250, y);
-      y+=44;
+    .forEach(function(row){
+      var v=String(row[1]||'').trim();
+      c.fillStyle='#8A8175'; c.font='700 21px '+F2;
+      c.fillText(row[0], colX, ly);
+      c.fillStyle= v?'#3A332C':'#C2B79F'; c.font='700 27px '+F2;
+      c.fillText(fitText(c, v||'—', right-colX), colX, ly+32);
+      ly+=66;
     });
+    y=Math.max(y+th+62, ly+10);
 
-    y+=14;
-    var brag=String(data.cardBrag||'').trim();
-    if(brag){
-      c.fillStyle='#8A8175'; c.font='700 23px '+F2;
-      c.fillText('한 줄 자랑', pad, y);
-      c.fillStyle='#3A332C'; c.font='700 30px '+F2;
-      y=wrapText(c, brag, pad, y+40, W-pad*2, 40, 2)+16;
+    /* 글 두 칸 — 나란히 놓아 아래로 넘치지 않게 */
+    var gap=36, cw2=Math.round((right-pad-gap)/2);
+    var brag=String(data.cardBrag||'').trim(), one=String(data.oneLine||'').trim();
+    function block(x,label,text,col,font,lh,maxL){
+      if(!text) return;
+      c.fillStyle=col; c.font='700 21px '+F2;
+      c.fillText(label, x, y);
+      c.fillStyle='#3A332C'; c.font=font;
+      wrapText(c, text, x, y+38, cw2, lh, maxL);
     }
-    var one=String(data.oneLine||'').trim();
-    if(one){
-      y+=10;
-      c.fillStyle='#8A8175'; c.font='700 23px '+F2;
-      c.fillText('오늘 알게 된 것', pad, y);
-      c.fillStyle='#3A332C'; c.font='400 27px '+F2;
-      y=wrapText(c, one, pad, y+38, W-pad*2, 38, 3)+10;
-    }
+    block(pad, '한 줄 자랑', brag, '#DE7C5A', '29px '+F1, 38, 3);
+    block(pad+cw2+gap, '오늘 알게 된 것', one, '#6E9A7E', '400 24px '+F2, 33, 4);
 
+    /* 비버샘 */
     var bv=$('#cardBv');
     if(bv && bv.complete && bv.naturalWidth){
-      var bw2=190, bh2=bv.naturalHeight/bv.naturalWidth*bw2;
-      c.drawImage(bv, W-pad-bw2-6, H-pad-bh2-46, bw2, bh2);
+      var bh2=bv.naturalHeight/bv.naturalWidth*BV;
+      c.drawImage(bv, W-pad-BV, H-pad-bh2-34, BV, bh2);
     }
-    c.fillStyle='#8A8175'; c.font='400 20px '+F2;
-    c.fillText('내가 직접 그렸어요 · 주변 사물을 실감 나게 그리기', pad, H-pad+6);
+    c.fillStyle='#A99E8C'; c.font='400 22px '+F2;
+    c.fillText('내가 직접 그렸어요 · 주변 사물을 실감 나게 그리기', pad, H-pad-8);
   });
 }
 function refreshCard(){ return buildCardCanvas(); }
-function cardBlob(){
+function cardBase(){
+  var who=[data.klass,data.team,data.name].filter(function(v){return String(v||'').trim();}).join('_')||'내작품';
+  return '밝은쪽어두운쪽_'+who;
+}
+function cardBlob(type){
   var cv=$('#cardCv');
-  return new Promise(function(res){
-    if(cv.toBlob) cv.toBlob(function(b){ res(b); },'image/png');
+  return new Promise(function(res,rej){
+    if(cv.toBlob) cv.toBlob(function(b){ b?res(b):rej(); }, type||'image/png', 0.92);
     else{
-      var u=cv.toDataURL('image/png').split(',')[1], bin=atob(u), a=new Uint8Array(bin.length);
-      for(var i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i);
-      res(new Blob([a],{type:'image/png'}));
+      try{
+        var u=cv.toDataURL(type||'image/png',0.92).split(',')[1], bin=atob(u), a=new Uint8Array(bin.length);
+        for(var i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i);
+        res(new Blob([a],{type:type||'image/png'}));
+      }catch(e){ rej(e); }
     }
   });
 }
-function cardName(){
-  var who=[data.klass,data.team,data.name].filter(function(v){return String(v||'').trim();}).join('_')||'내그림';
-  return '밝은쪽어두운쪽_'+who+'.png';
+
+/* --- PDF 한 장 만들기 (외부 라이브러리 없이) ---
+   A4 한 쪽 안에 그림(JPEG)을 그대로 끼워 넣는다. */
+function makePdf(jpeg, iw, ih){
+  var PW=595.28, PH=841.89, M=18;
+  var sc=Math.min((PW-M*2)/iw,(PH-M*2)/ih);
+  var w=iw*sc, h=ih*sc, x=(PW-w)/2, yy=(PH-h)/2;
+  function n(v){ return (Math.round(v*100)/100).toString(); }
+  var content='q '+n(w)+' 0 0 '+n(h)+' '+n(x)+' '+n(yy)+' cm /Im0 Do Q\n';
+  var objs=[
+    '<</Type/Catalog/Pages 2 0 R>>',
+    '<</Type/Pages/Kids[3 0 R]/Count 1>>',
+    '<</Type/Page/Parent 2 0 R/MediaBox[0 0 '+n(PW)+' '+n(PH)+']/Resources<</XObject<</Im0 4 0 R>>>>/Contents 5 0 R>>',
+    null,   /* 그림 */
+    null    /* 내용 */
+  ];
+  var parts=[], pos=0, offsets=[];
+  function put(p){
+    parts.push(p);
+    pos += (typeof p==='string') ? p.length : p.byteLength;
+  }
+  put('%PDF-1.4\n%âãÏÓ\n');
+  for(var i=0;i<objs.length;i++){
+    offsets[i]=pos;
+    if(i===3){
+      put((i+1)+' 0 obj\n<</Type/XObject/Subtype/Image/Width '+iw+'/Height '+ih
+        +'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length '+jpeg.byteLength+'>>\nstream\n');
+      put(jpeg);
+      put('\nendstream\nendobj\n');
+    } else if(i===4){
+      put((i+1)+' 0 obj\n<</Length '+content.length+'>>\nstream\n'+content+'endstream\nendobj\n');
+    } else {
+      put((i+1)+' 0 obj\n'+objs[i]+'\nendobj\n');
+    }
+  }
+  var xref=pos;
+  var x0='xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n';
+  for(var j=0;j<objs.length;j++) x0+=('0000000000'+offsets[j]).slice(-10)+' 00000 n \n';
+  x0+='trailer\n<</Size '+(objs.length+1)+'/Root 1 0 R>>\nstartxref\n'+xref+'\n%%EOF\n';
+  put(x0);
+  var blobParts=parts.map(function(p){
+    if(typeof p!=='string') return p;
+    var a=new Uint8Array(p.length);
+    for(var k=0;k<p.length;k++) a[k]=p.charCodeAt(k)&0xff;
+    return a;
+  });
+  return new Blob(blobParts,{type:'application/pdf'});
+}
+function cardPdfBlob(){
+  var cv=$('#cardCv');
+  return cardBlob('image/jpeg').then(function(b){
+    return b.arrayBuffer().then(function(buf){
+      return makePdf(new Uint8Array(buf), cv.width, cv.height);
+    });
+  });
 }
 var DLP=(window.claude&&window.claude.use)?window.claude.use('downloads'):Promise.resolve(null);
 DLP=DLP.catch(function(){ return null; });
-function bindCard(){
-  var makeBtn=$('#makeCard');
-  if(makeBtn) makeBtn.addEventListener('click',function(){
-    refreshCard().then(function(){ $('#dlCard').disabled=false; toast('카드를 만들었어요.'); });
-  });
-  var dlBtn=$('#dlCard');
-  if(dlBtn) dlBtn.addEventListener('click',function(){
-    dlBtn.disabled=true;
-    refreshCard().then(cardBlob).then(function(blob){
-      var fname=cardName();
-      return DLP.then(function(dl){
-        if(dl){
-          return dl.save({filename:fname,data:blob}).then(function(){ toast('카드를 저장했어요. 샘보드에 사진으로 올려요.'); },
-            function(e){
-              var cd=e&&e.code;
-              if(cd==='declined') toast('저장을 취소했어요.');
-              else if(cd==='rate_limited') toast('잠시 뒤에 다시 눌러 주세요.');
-              else toast('저장이 안 됐어요. 카드를 꾹 길게 눌러 “이미지 저장”을 골라 주세요.');
-            });
-        }
-        var url=URL.createObjectURL(blob);
-        var a=document.createElement('a');
-        a.download=fname; a.href=url;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(function(){ URL.revokeObjectURL(url); },60000);
-        toast('카드를 저장했어요. 샘보드에 사진으로 올려요.');
+function saveBlob(blob,fname,done){
+  DLP.then(function(dl){
+    if(dl){
+      dl.save({filename:fname,data:blob}).then(function(){ toast(done); },function(e){
+        var cd=e&&e.code;
+        if(cd==='declined') toast('저장을 취소했어요.');
+        else if(cd==='rate_limited') toast('잠시 뒤에 다시 눌러 주세요.');
+        else toast('저장이 안 됐어요. 작품을 꾹 길게 눌러 저장해 주세요.');
       });
-    }).catch(function(){ toast('카드를 만들지 못했어요. 다시 눌러 주세요.'); })
-      .then(function(){ dlBtn.disabled=false; });
+      return;
+    }
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.download=fname; a.href=url;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); },60000);
+    toast(done);
   });
+}
+function bindCard(){
+  function saver(btn, kind){
+    var b=$(btn); if(!b) return;
+    b.addEventListener('click',function(){
+      b.disabled=true;
+      toast('작품을 만드는 중이에요…');
+      refreshCard()
+        .then(function(){ return kind==='pdf' ? cardPdfBlob() : cardBlob('image/png'); })
+        .then(function(blob){
+          saveBlob(blob, cardBase()+(kind==='pdf'?'.pdf':'.png'),
+            kind==='pdf' ? 'PDF로 저장했어요. 샘보드에 올려요.' : '이미지로 저장했어요. 샘보드에 올려요.');
+        })
+        .catch(function(){ toast('저장하지 못했어요. 다시 눌러 주세요.'); })
+        .then(function(){ b.disabled=false; });
+    });
+  }
+  saver('#dlPdf','pdf');
+  saver('#dlImg','img');
 }
 
 /* ============ 인쇄 ============ */
