@@ -1664,98 +1664,137 @@ function lightDraw(){
       + (L.dist<28?' 빛이 가까워서 밝은 곳과 어두운 곳의 차이가 커요.':(L.dist>=60?' 빛이 멀어서 차이가 부드러워요.':''));
   }
 }
+/* ── 빛 계산 ──
+   화면의 2차원 각도를 3차원 빛 방향으로 바꾸고, 면이 빛을 향한 정도(람베르트)로 밝기를 정한다.
+   교과서: "빛의 거리가 가까울수록 밝은 면은 더욱 밝게, 어두운 면은 더욱 어둡게 보인다." */
+var BASE=[214,206,192];
+function lightVec3(L){
+  var lz=0.50, s=Math.sqrt(1-lz*lz);
+  return [L.x*s, L.y*s, lz];
+}
+function shadeParams(L){
+  var near=L.near;                        /* 1이면 아주 가까이, 0이면 멀리 */
+  return {
+    amb : 0.05 + 0.26*(1-near),           /* 멀수록 주변광이 돌아 어두운 곳이 덜 어둡다 */
+    gain: 0.80 + 0.55*near,               /* 가까울수록 밝은 곳이 더 밝다 */
+    refl: 0.13 + 0.10*(1-near),           /* 반사광 */
+    spec: 0.30 + 0.45*near
+  };
+}
+/* putImageData 는 아래 그림을 지우고 덮어쓴다. 딴 종이에 그린 뒤 얹어야 배경이 남는다. */
+function blit(c,img,x0,y0){
+  var off=document.createElement('canvas');
+  off.width=img.width; off.height=img.height;
+  off.getContext('2d').putImageData(img,0,0);
+  c.drawImage(off,x0,y0);
+  off.width=0; off.height=0;
+}
+function shadeToRGB(v, sp){
+  var f=Math.max(0,Math.min(1.35,v));
+  var r=BASE[0]*f + 255*sp, g=BASE[1]*f + 255*sp, b=BASE[2]*f + 255*sp;
+  return [Math.min(255,r)|0, Math.min(255,g)|0, Math.min(255,b)|0];
+}
 function drawSphere(c,cx,cy,r,L,contrast){
-  var base='#DED5C5', lit=mix(base,'#FFFFFF',0.55+0.45*contrast), dark=mix(base,'#2A231C',0.55+0.30*contrast);
-  var hx=cx+L.x*r*0.50, hy=cy+L.y*r*0.50;
-  c.save();
-  c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.clip();
-  var g=c.createRadialGradient(hx,hy,r*0.04,cx-L.x*r*0.30,cy-L.y*r*0.30,r*1.62);
-  g.addColorStop(0,'#FFFFFF');
-  g.addColorStop(0.16,lit);
-  g.addColorStop(0.46,base);
-  g.addColorStop(0.78,mix(base,dark,0.72));
-  g.addColorStop(1,dark);
-  c.fillStyle=g; c.fillRect(cx-r,cy-r,r*2,r*2);
-  /* 반사광 — 바닥에 부딪힌 빛이 어두운 쪽 끝을 살짝 밝힌다 */
-  var rx=cx-L.x*r*0.80, ry=cy+r*0.62;
-  var rg=c.createRadialGradient(rx,ry,2,rx,ry,r*0.78);
-  rg.addColorStop(0,'rgba(247,238,222,'+(0.42*contrast).toFixed(3)+')');
-  rg.addColorStop(1,'rgba(247,238,222,0)');
-  c.fillStyle=rg; c.fillRect(cx-r,cy-r,r*2,r*2);
-  c.restore();
+  var P=shadeParams(L), Lv=lightVec3(L);
+  var x0=Math.floor(cx-r-1), y0=Math.floor(cy-r-1), n=Math.ceil(2*r+2);
+  var img=c.createImageData(n,n), d=img.data;
+  for(var j=0;j<n;j++){
+    var ny=((y0+j+0.5)-cy)/r;
+    for(var i=0;i<n;i++){
+      var nx=((x0+i+0.5)-cx)/r;
+      var q=nx*nx+ny*ny, k=(j*n+i)*4;
+      if(q>1.02){ d[k+3]=0; continue; }
+      var edge = q>1 ? 0 : (q>0.985 ? (1-q)/0.015 : 1);
+      var nz=Math.sqrt(Math.max(0,1-q));
+      var nd=nx*Lv[0]+ny*Lv[1]+nz*Lv[2];
+      var dif=Math.max(0,nd);
+      /* 반사광 — 바닥에 부딪혀 올라온 빛이 아래쪽 면을 살짝 밝힌다 */
+      var bounce=Math.max(0, ny*0.97+nz*0.24)*(1-dif);
+      var v=P.amb + P.gain*dif + P.refl*bounce;
+      var sp=Math.pow(dif,26)*P.spec;
+      var rgb=shadeToRGB(v,sp);
+      d[k]=rgb[0]; d[k+1]=rgb[1]; d[k+2]=rgb[2]; d[k+3]=Math.round(255*edge);
+    }
+  }
+  blit(c,img,x0,y0);
   /* 닿는 자리 그늘 */
-  c.save();
-  c.globalAlpha=0.5;
-  var cg=c.createRadialGradient(cx,cy+r*0.98,2,cx,cy+r*0.98,r*0.9);
-  cg.addColorStop(0,'rgba(26,20,14,0.5)'); cg.addColorStop(1,'rgba(26,20,14,0)');
-  c.fillStyle=cg; c.beginPath(); c.ellipse(cx,cy+r*0.99,r*0.85,r*0.22,0,0,Math.PI*2); c.fill();
+  c.save(); c.globalAlpha=0.55;
+  var cg=c.createRadialGradient(cx,cy+r*0.98,2,cx,cy+r*0.98,r*0.85);
+  cg.addColorStop(0,'rgba(26,20,14,0.55)'); cg.addColorStop(1,'rgba(26,20,14,0)');
+  c.fillStyle=cg; c.beginPath(); c.ellipse(cx,cy+r*0.99,r*0.8,r*0.2,0,0,Math.PI*2); c.fill();
   c.restore();
   return {
-    light:[hx,hy],
-    dark:[cx-L.x*r*0.62,cy-L.y*r*0.62],
-    refl:[cx-L.x*r*0.74,cy+r*0.66]
+    light:[cx+Lv[0]*r*0.62, cy+Lv[1]*r*0.62],
+    dark:[cx-Lv[0]*r*0.60, cy-Lv[1]*r*0.60],
+    refl:[cx-Lv[0]*r*0.62, cy+r*0.72]
   };
-}
-function faceShade(n,L,contrast){
-  var d=n[0]*L.x+n[1]*L.y;
-  var t=Math.max(0,d);
-  return 0.14+0.86*Math.pow(t,0.75)*contrast;
 }
 function drawCube(c,cx,GY,r,L,contrast){
+  var P=shadeParams(L), Lv=lightVec3(L);
   var s=r*1.55, top=GY-s, dx=s*0.40, dy=s*0.24;
-  var base='#DED5C5';
   var F={
-    front:{ pts:[[cx-s/2,top],[cx-s/2,GY],[cx+s/2,GY],[cx+s/2,top]], n:[-0.34,0.28] },
-    right:{ pts:[[cx+s/2,top],[cx+s/2+dx,top-dy],[cx+s/2+dx,GY-dy],[cx+s/2,GY]], n:[0.92,0.26] },
-    top:{ pts:[[cx-s/2,top],[cx-s/2+dx,top-dy],[cx+s/2+dx,top-dy],[cx+s/2,top]], n:[0,-1] }
+    front:{ pts:[[cx-s/2,top],[cx-s/2,GY],[cx+s/2,GY],[cx+s/2,top]], n:[0,0,1] },
+    right:{ pts:[[cx+s/2,top],[cx+s/2+dx,top-dy],[cx+s/2+dx,GY-dy],[cx+s/2,GY]], n:[1,0,0] },
+    top:{ pts:[[cx-s/2,top],[cx-s/2+dx,top-dy],[cx+s/2+dx,top-dy],[cx+s/2,top]], n:[0,-1,0] }
   };
-  var order=['front','right','top'], out={};
-  order.forEach(function(k){
-    var f=F[k], b=faceShade(f.n,L,contrast);
-    var col = b>0.5 ? mix(base,'#FFFFFF',(b-0.5)*1.8) : mix(base,'#2E2820',(0.5-b)*1.75);
-    c.fillStyle=col; c.strokeStyle='rgba(58,49,40,.5)'; c.lineWidth=1.2;
+  var out={};
+  ['front','right','top'].forEach(function(k){
+    var f=F[k];
+    var nd=f.n[0]*Lv[0]+f.n[1]*Lv[1]+f.n[2]*Lv[2];
+    var v=P.amb + P.gain*Math.max(0,nd);
+    var rgb=shadeToRGB(v,0);
+    c.fillStyle='rgb('+rgb[0]+','+rgb[1]+','+rgb[2]+')';
+    c.strokeStyle='rgba(58,49,40,.45)'; c.lineWidth=1.2;
     c.beginPath(); f.pts.forEach(function(p,i){ i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]); }); c.closePath(); c.fill(); c.stroke();
     var mx=f.pts.reduce(function(a,p){return a+p[0];},0)/f.pts.length;
     var my=f.pts.reduce(function(a,p){return a+p[1];},0)/f.pts.length;
-    out[k]=[mx,my,b];
+    out[k]=[mx,my,v];
   });
-  var lit=order.slice().sort(function(a,b){ return out[b][2]-out[a][2]; });
-  /* 평평한 면에는 반사광이 거의 드러나지 않는다 — 이름표를 붙이지 않는다 */
-  return { light:[out[lit[0]][0],out[lit[0]][1]], dark:[out[lit[2]][0],out[lit[2]][1]], refl:null };
+  var order=['front','right','top'].sort(function(a,b){ return out[b][2]-out[a][2]; });
+  return { light:[out[order[0]][0],out[order[0]][1]], dark:[out[order[2]][0],out[order[2]][1]], refl:null };
 }
 function drawCylinder(c,cx,GY,r,L,contrast){
-  var w=r*1.35, h=r*1.9, top=GY-h, ry=w*0.26, base='#DED5C5';
-  var lit=mix(base,'#FFFFFF',0.5+0.5*contrast), dark=mix(base,'#2A231C',0.5+0.35*contrast);
-  var hx=cx+L.x*w*0.42;
-  var g=c.createLinearGradient(cx-w/2,0,cx+w/2,0);
-  var t=(hx-(cx-w/2))/w;
-  g.addColorStop(0, L.x<0?lit:dark);
-  g.addColorStop(Math.max(0.06,Math.min(0.94,t)),'#FFFFFF');
-  g.addColorStop(1, L.x<0?dark:lit);
+  var P=shadeParams(L), Lv=lightVec3(L);
+  var w=r*1.35, h=r*1.9, top=GY-h, ry=w*0.26, R=w/2;
+  var x0=Math.floor(cx-R-1), y0=Math.floor(top), n=Math.ceil(w+2), m=Math.ceil(h+ry+2);
+  var img=c.createImageData(n,m), d=img.data;
+  for(var j=0;j<m;j++){
+    for(var i=0;i<n;i++){
+      var nx=((x0+i+0.5)-cx)/R, k=(j*n+i)*4;
+      var q=nx*nx;
+      if(q>1.02){ d[k+3]=0; continue; }
+      var edge = q>1 ? 0 : (q>0.985 ? (1-q)/0.015 : 1);
+      var nz=Math.sqrt(Math.max(0,1-q));
+      var nd=nx*Lv[0]+nz*Lv[2];
+      var dif=Math.max(0,nd);
+      var v=P.amb + P.gain*dif + P.refl*Math.max(0,-nx*Lv[0])*(1-dif)*0.7;
+      var sp=Math.pow(dif,30)*P.spec*0.8;
+      var rgb=shadeToRGB(v,sp);
+      d[k]=rgb[0]; d[k+1]=rgb[1]; d[k+2]=rgb[2]; d[k+3]=Math.round(255*edge);
+    }
+  }
+  /* 옆면과 아래 곡면을 한 덩어리로 오려 낸다 */
   c.save();
   c.beginPath();
-  c.moveTo(cx-w/2,top); c.lineTo(cx-w/2,GY);
-  c.ellipse(cx,GY,w/2,ry,0,Math.PI,0,true);
-  c.lineTo(cx+w/2,top); c.closePath();
+  c.moveTo(cx-R, top);
+  c.lineTo(cx-R, GY);
+  c.ellipse(cx, GY, R, ry, 0, Math.PI, 0, true);
+  c.lineTo(cx+R, top);
+  c.closePath();
   c.clip();
-  c.fillStyle=g; c.fillRect(cx-w/2,top-ry,w,h+ry*2);
-  /* 반사광 */
-  var rx=cx-L.x*w*0.42;
-  var rg=c.createLinearGradient(cx-w/2,0,cx+w/2,0);
-  rg.addColorStop(0,'rgba(247,238,222,0)');
-  rg.addColorStop(Math.max(0.04,Math.min(0.96,(rx-(cx-w/2))/w)),'rgba(247,238,222,'+(0.30*contrast).toFixed(3)+')');
-  rg.addColorStop(1,'rgba(247,238,222,0)');
-  c.fillStyle=rg; c.fillRect(cx-w/2,GY-h*0.42,w,h*0.42);
+  blit(c,img,x0,y0);
   c.restore();
+
   /* 윗면 */
-  var tb=faceShade([0,-1],L,contrast);
-  c.fillStyle= tb>0.5 ? mix(base,'#FFFFFF',(tb-0.5)*1.8) : mix(base,'#2E2820',(0.5-tb)*1.7);
+  var tv=P.amb+P.gain*Math.max(0,-Lv[1]);
+  var trgb=shadeToRGB(tv,0);
+  c.fillStyle='rgb('+trgb.join(',')+')';
   c.strokeStyle='rgba(58,49,40,.45)'; c.lineWidth=1.2;
-  c.beginPath(); c.ellipse(cx,top,w/2,ry,0,0,Math.PI*2); c.fill(); c.stroke();
+  c.beginPath(); c.ellipse(cx,top,R,ry,0,0,Math.PI*2); c.fill(); c.stroke();
   return {
-    light:[hx,top+h*0.42],
-    dark:[cx-L.x*w*0.42,top+h*0.45],
-    refl:[cx-L.x*w*0.40,GY-h*0.12]
+    light:[cx+Lv[0]*R*0.62, top+h*0.42],
+    dark:[cx-Lv[0]*R*0.60, top+h*0.46],
+    refl:[cx-Lv[0]*R*0.62, GY-h*0.14]
   };
 }
 function drawLightLabels(c,W,H,A,L){
