@@ -889,7 +889,7 @@ dialog{border:0!important;border-radius:22px!important;box-shadow:0 24px 60px rg
       <button class="tool" data-open="printDlg">인쇄하기</button>
       <span class="music">
         <button class="tool" id="musicBtn" aria-pressed="false"><span class="note-mark">♪</span> 음악 켜기</button>
-        <input type="range" id="musicVol" min="0" max="100" value="45" hidden aria-label="음악 볼륨">
+        <input type="range" id="musicVol" min="0" max="100" value="28" hidden aria-label="음악 볼륨">
       </span>
     </span>
   </header>
@@ -3142,28 +3142,31 @@ var ART=(function(){
            hasSketch:function(){ return SKETCH_END>0; }, persist:function(){ persist(true); }, fit:fitPaper };
 })();
 
-/* 미술 시간 산책곡 — C장조 · 96BPM · 16마디 반복
-   마림바 멜로디 / 우쿨렐레풍 뜯는 화음 / 부드러운 베이스 / 셰이커·스냅 */
-var MU={ ctx:null, master:null, send:null, noise:null, timer:null, on:false, vol:0.45, step:0, next:0 };
-var MU_BPM=96, MU_STEP=60/MU_BPM/2, MU_GAIN=1.0;
+/* 연필 소리 옆에 깔리는 조용한 곡 — C장조 · 64BPM · 8마디 반복
+   긴 여운의 패드 / 이따금 울리는 종소리 / 낮고 부드러운 베이스.
+   그리는 동안 켜 두는 것이라 타악기는 넣지 않았다. */
+var MU={ ctx:null, master:null, send:null, noise:null, timer:null, on:false, vol:0.28, step:0, next:0 };
+var MU_BPM=64, MU_STEP=60/MU_BPM/2, MU_GAIN=1.0;
 function mtof(m){ return 440*Math.pow(2,(m-69)/12); }
-/* [화음 구성음 3개, 베이스] */
-var MU_CH={ C:[60,64,67,48], Am:[57,60,64,45], F:[57,60,65,41], G:[55,59,62,43], Em:[55,59,64,40], Dm:[57,62,65,38] };
-/* 마디별 화음 — 두 개면 앞 절반/뒤 절반 */
-var MU_PROG=[['C'],['Am'],['F'],['G'],['C'],['Am'],['F','G'],['C'],
-             ['F'],['G'],['Em'],['Am'],['Dm'],['G'],['C'],['G']];
-/* 마디별 8분음표 멜로디(MIDI 번호, null=쉼) */
+/* [화음 구성음(7화음), 베이스] */
+var MU_CH={
+  C:  [[60,64,67,71],48],   Am: [[57,60,64,67],45],
+  F:  [[57,60,65,69],41],   G:  [[59,62,67,74],43],
+  Em: [[59,64,67,71],40],   Dm: [[57,62,65,69],38]
+};
+/* 마디별 화음 — 여덟 마디가 천천히 돈다 */
+var MU_PROG=['C','Am','F','G','Em','Am','Dm','G'];
+/* 마디별 종소리(8분음표 자리, null=쉼) — 아주 성기게 */
 var MU_MEL=[
-  [76,null,79,null,76,74,72,null], [76,null,69,null,72,null,null,null],
-  [77,null,81,null,77,76,74,null], [74,null,67,null,71,null,74,null],
-  [76,null,79,null,81,79,76,null], [72,null,76,null,69,null,null,null],
-  [77,null,76,null,74,null,71,null], [72,null,null,null,67,null,72,null],
-  [69,72,77,null,81,null,77,null], [79,null,74,null,71,null,74,null],
-  [76,null,71,null,67,null,71,null], [72,null,76,null,81,null,null,null],
-  [77,null,74,null,69,null,74,null], [71,null,74,null,79,null,77,null],
-  [76,null,72,null,67,null,72,null], [74,null,null,null,71,null,67,null]
+  [79,null,null,null,76,null,null,null],
+  [null,null,72,null,null,null,null,null],
+  [77,null,null,null,81,null,null,null],
+  [null,null,74,null,null,null,79,null],
+  [76,null,null,null,71,null,null,null],
+  [null,null,72,null,null,null,null,null],
+  [74,null,null,null,69,null,null,null],
+  [null,null,71,null,null,null,null,null]
 ];
-var MU_STRUM=[0,3,4,6];   /* 1박 · 2박 뒤 · 3박 · 4박 — 살짝 엇박 */
 
 function muBuild(given){
   var ctx=given;
@@ -3213,6 +3216,25 @@ function muMarimba(m, t, len, vel){
   var o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=f*3.99; o2.connect(g2);
   g.connect(out); g2.connect(out); muOut(out,0.5);
   o.start(t); o.stop(t+1.4); o2.start(t); o2.stop(t+0.15);
+}
+/* 패드 — 천천히 들어왔다 천천히 빠지는 배경 화음 */
+function muPad(notes, t, len, vel){
+  var ctx=MU.ctx, out=muPan(0);
+  var lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1150;
+  lp.connect(out); muOut(out,0.45);
+  var g=ctx.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.030*vel, t+len*0.35);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+len);
+  g.connect(lp);
+  notes.forEach(function(m,i){
+    [0,-0.06].forEach(function(det){
+      var o=ctx.createOscillator();
+      o.type = i===0 ? 'triangle' : 'sine';
+      o.frequency.value=mtof(m)*(1+det/100);
+      o.connect(g); o.start(t); o.stop(t+len+0.2);
+    });
+  });
 }
 function muPluck(notes, t, vel){
   var ctx=MU.ctx, out=muPan(-0.22);
@@ -3273,21 +3295,23 @@ function muSnap(t){
   s.start(t, Math.random()*0.8, 0.1);
 }
 function muPlayStep(i, t){
-  var bar=Math.floor(i/8)%16, st=i%8, loop=Math.floor(i/128);
-  var prog=MU_PROG[bar];
-  var ch=MU_CH[(prog.length>1 && st>=4) ? prog[1] : prog[0]];
-  /* 두 번째 반복마다 앞 8마디는 멜로디를 쉬어 반복감을 줄인다 */
-  var rest = (loop%2===1 && bar<8);
+  var bar=Math.floor(i/8)%8, st=i%8, loop=Math.floor(i/64);
+  var ch=MU_CH[MU_PROG[bar]];
+  /* 마디마다 한 번, 긴 패드 */
+  if(st===0) muPad(ch[0], t, MU_STEP*8.4, 1);
+  /* 베이스는 마디 앞과 중간에만, 아주 부드럽게 */
+  if(st===0) muBass(ch[1], t, MU_STEP*5.5);
+  if(st===4) muBass(ch[1]+7, t, MU_STEP*3.0);
+  /* 화음 뜯기는 두 마디에 한 번 */
+  if(st===0 && bar%2===0) muPluck(ch[0].slice(0,3), t, 0.5);
+  /* 종소리 — 두 번째 바퀴마다 앞 네 마디는 쉰다 */
+  var rest = (loop%2===1 && bar<4);
   var mel=MU_MEL[bar][st];
   if(mel!==null && !rest){
     var k=1;
-    while(k<4 && st+k<8 && MU_MEL[bar][st+k]===null) k++;
-    muMarimba(mel, t, k*MU_STEP, st%2===0 ? 1 : 0.78);
+    while(k<6 && st+k<8 && MU_MEL[bar][st+k]===null) k++;
+    muMarimba(mel, t, k*MU_STEP, st===0 ? 0.62 : 0.48);
   }
-  if(MU_STRUM.indexOf(st)>=0) muPluck(ch.slice(0,3), t, st===0 ? 0.7 : 1);
-  if(st===0 || st===4){ muBass(ch[3], t, MU_STEP*3.4); muKick(t); }
-  if(st===2 || st===6) muSnap(t);
-  muShaker(t, st%2===1 ? 1 : 0.55);
 }
 function muSchedule(){
   if(!MU.on || !MU.ctx) return;
