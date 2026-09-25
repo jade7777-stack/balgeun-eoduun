@@ -870,6 +870,57 @@ dialog{border:0!important;border-radius:22px!important;box-shadow:0 24px 60px rg
   .head-row-bv{display:block}
 }
 
+/* ── 그리기 도구: 아이콘 막대 ── */
+.drawwrap{position:relative}
+.rail{display:flex;flex-direction:column;gap:7px;width:auto;overflow:visible;padding:0}
+.rbtn{display:grid;place-items:center;gap:2px;width:64px;min-height:58px;padding:7px 4px;
+  border:1.5px solid var(--line);border-radius:18px;background:var(--paper);
+  transition:background .15s,border-color .15s,transform .12s}
+.rbtn i{font-style:normal;font-size:1.3rem;line-height:1.05}
+.rbtn span{font-size:.62rem;font-weight:700;color:var(--muted);line-height:1.1;white-space:nowrap}
+.rbtn:hover:not(:disabled){background:#FFF6E6;border-color:#E3D4B6;transform:translateY(-1px)}
+.rbtn[aria-expanded=true]{background:var(--sage-deep);border-color:var(--sage-deep)}
+.rbtn[aria-expanded=true] i,.rbtn[aria-expanded=true] span{color:#fff}
+.rbtn:disabled{opacity:.34}
+.rbtn.zen{background:#F3EEE2}
+.tpop{position:absolute;z-index:8;display:grid;gap:6px;min-width:150px;padding:10px;
+  border:1.5px solid var(--line);border-radius:18px;background:rgba(255,253,248,.98);
+  box-shadow:0 16px 38px rgba(92,74,56,.24)}
+.tpop>b{font-size:.7rem;color:var(--muted);font-weight:700;padding:0 2px}
+.tpop button{display:flex;align-items:center;gap:8px;justify-content:flex-start;
+  border:1.5px solid var(--line);border-radius:999px;background:#FFFBF2;
+  padding:9px 13px;font-weight:700;font-size:.84rem;white-space:nowrap}
+.tpop button i{font-style:normal;font-size:1.05rem}
+.tpop button[aria-pressed=true]{background:var(--sage-deep);border-color:var(--sage-deep);color:#fff}
+.tpop button:hover{background:var(--sand)}
+.drawhelp{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* 크게 그리기 — 설명을 접고 종이를 화면 가득 */
+.slide.draw.zen .drawtop{display:none}
+.slide.draw.zen .drawfoot .hint{display:none}
+.slide.draw.zen .drawhelp{display:none}
+.slide.draw.zen{padding:8px}
+
+@media (max-width:860px){
+  .drawwrap{grid-template-columns:1fr;grid-template-rows:auto auto}
+  .rail{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:6px}
+  .rbtn{width:62px;min-height:54px}
+  .tpop{min-width:160px}
+}
+
+/* 크게 그리기 — 그리기 앱처럼 도구 막대를 종이 위에 띄운다 */
+.slide.draw.zen .drawwrap{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr)}
+.slide.draw.zen .rail{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:7;
+  padding:7px;border-radius:24px;background:rgba(255,253,248,.93);backdrop-filter:blur(4px);
+  box-shadow:0 10px 28px rgba(92,74,56,.2)}
+.slide.draw.zen .rbtn{border-color:transparent;background:transparent}
+.slide.draw.zen .rbtn:hover:not(:disabled){background:#FFF6E6}
+.slide.draw.zen .rbtn[aria-expanded=true]{background:var(--sage-deep)}
+@media (max-width:860px){
+  .slide.draw.zen .rail{right:auto;left:50%;top:auto;bottom:10px;transform:translateX(-50%);
+    flex-direction:row;flex-wrap:nowrap;max-width:calc(100% - 20px);overflow-x:auto}
+}
+
 </style>
 </head>
 <body>
@@ -889,7 +940,7 @@ dialog{border:0!important;border-radius:22px!important;box-shadow:0 24px 60px rg
       <button class="tool" data-open="printDlg">인쇄하기</button>
       <span class="music">
         <button class="tool" id="musicBtn" aria-pressed="false"><span class="note-mark">♪</span> 음악 켜기</button>
-        <input type="range" id="musicVol" min="0" max="100" value="28" hidden aria-label="음악 볼륨">
+        <input type="range" id="musicVol" min="0" max="100" value="34" hidden aria-label="음악 볼륨">
       </span>
     </span>
   </header>
@@ -2855,66 +2906,144 @@ var ART=(function(){
   }
   function showEmpty(on){ var el=$('#artEmpty'); if(el) el.style.display=on?'':'none'; }
 
-  /* 종이는 언제나 3:2 — 칸에 맞춰 가장 크게 잡는다(그림이 늘어나지 않게) */
+  /* 종이는 언제나 3:2. 도구 막대를 뺀 나머지를 꽉 채운다.
+     (칸 높이를 재면 종이 → 칸 → 종이로 서로 물고 도는 탓에 작아졌다) */
   function fitPaper(){
     if(!ready) return;
-    var box=paper.parentNode; if(!box) return;
-    var r=box.getBoundingClientRect();
-    var aw=r.width, ah=r.height;
-    var w,h;
-    if(ah<120){ w=aw; h=Math.round(aw*H/W); }
-    else { w=Math.min(aw, ah*W/H); h=w*H/W; }
-    w=Math.max(180,Math.round(w)); h=Math.max(120,Math.round(h));
+    var wrap=$('.drawwrap'); if(!wrap) return;
+    var rail=$('#artTools'), sl=$('.slide.draw');
+    var top=$('.drawtop'), foot=$('.drawfoot');
+    var narrow=window.matchMedia('(max-width:860px)').matches;
+    var wr=wrap.getBoundingClientRect();
+    function hOf(el){ return el ? el.getBoundingClientRect().height : 0; }
+
+    /* 가로 여유 — 막대가 옆에 서 있을 때만 뺀다 */
+    var aw=wr.width;
+    if(!zen && !narrow && rail) aw -= rail.getBoundingClientRect().width + 14;
+
+    /* 세로 여유 — 화면에서 머리글·도구막대·아래줄을 뺀 나머지 */
+    var stH = sl ? sl.getBoundingClientRect().height : 0;
+    var used = 0;
+    if(!zen) used += hOf(top) + 10;
+    if(!zen && narrow) used += hOf(rail) + 10;
+    if(!zen || !narrow){ /* 막대가 옆이면 세로를 먹지 않는다 */ }
+    used += hOf(foot) + 10;
+    var ah = stH - used - 18;
+    if(!(ah>80)) ah = wr.height;
+    if(!(ah>80)) ah = aw*H/W;
+
+    /* 휴대폰 세로는 높이에 맞추면 손바닥만 해진다 — 폭을 꽉 채우고 화면을 내려 쓰게 둔다 */
+    var portrait = window.innerHeight > window.innerWidth;
+    var w = (narrow && portrait) ? aw : Math.min(aw, ah*W/H);
+    var h = w*H/W;
+    w=Math.max(220,Math.round(w)); h=Math.max(147,Math.round(h));
     paper.style.width=w+'px'; paper.style.height=h+'px';
   }
 
-  /* ---------- 도구 막대 ---------- */
+  /* ---------- 도구 막대 — 아이콘만 세워 두고, 누르면 그때 펼친다 ---------- */
+  var POP=null;
+  function toolIco(k){ return TOOLS[k].ico; }
   function paintTools(){
     var box=$('#artTools'); if(!box) return;
-    var order = step===1 ? ['hb','soft','broad','eraser'] : ['soft','broad','hb','eraser'];
-    box.innerHTML='<div class="tgroup"><b>연필</b><div class="trow">'
-      + order.map(function(k){ return '<button type="button" class="tbtn" data-tool="'+k+'" aria-pressed="'+(S.tool===k)+'">'
-          + '<span class="ti">'+TOOLS[k].ico+'</span>'+TOOLS[k].name+'</button>'; }).join('')
-      + '</div></div>'
-      + '<div class="tgroup"><b>굵기</b><div class="trow">'
-      + SIZES.map(function(s,i){ return '<button type="button" class="tbtn" data-size="'+i+'" aria-pressed="'+(S.size===i)+'">'+s[0]+'</button>'; }).join('')
-      + '</div></div>'
-      + '<div class="tgroup"><b>진하기</b><div class="trow">'
-      + DARK.map(function(s,i){ return '<button type="button" class="tbtn" data-dark="'+i+'" aria-pressed="'+(S.dark===i)+'">'+s[0]+'</button>'; }).join('')
-      + '</div></div>'
-      + '<div class="tgroup"><b>고치기</b><div class="trow">'
-      + '<button type="button" class="tbtn" data-act="undo"'+(undoS.length?'':' disabled')+'>↩ 되돌리기</button>'
-      + '<button type="button" class="tbtn" data-act="redo"'+(redoS.length?'':' disabled')+'>↪ 다시</button>'
-      + '<button type="button" class="tbtn wide" data-act="clear">🗑 다 지우기</button>'
-      + '</div></div>';
+    var sizeName=SIZES[S.size][0], darkName=DARK[S.dark][0];
+    box.className='rail';
+    box.innerHTML=
+        railBtn('tool',  toolIco(S.tool), TOOLS[S.tool].name, '연필 고르기')
+      + railBtn('size',  '◍', sizeName, '굵기')
+      + railBtn('dark',  '◐', darkName, '진하기')
+      + '<button type="button" class="rbtn" data-act="undo" title="되돌리기"'+(undoS.length?'':' disabled')+'><i>↩</i><span>되돌리기</span></button>'
+      + '<button type="button" class="rbtn" data-act="redo" title="다시"'+(redoS.length?'':' disabled')+'><i>↪</i><span>다시</span></button>'
+      + railBtn('more',  '⋯', '더보기', '더보기')
+      + '<button type="button" class="rbtn zen" data-act="zen" title="크게 그리기"><i>'+(zen?'⤡':'⤢')+'</i><span>'+(zen?'줄이기':'크게')+'</span></button>';
     paintHelp();
+  }
+  function railBtn(key, ico, label, title){
+    return '<button type="button" class="rbtn" data-pop="'+key+'" title="'+title+'" aria-expanded="'+(POP===key)+'">'
+      + '<i>'+ico+'</i><span>'+label+'</span></button>';
+  }
+  function popClose(){ POP=null; var e=$('#artPop'); if(e) e.parentNode.removeChild(e); paintTools(); }
+  function popOpen(key, btn){
+    var wrap=$('.drawwrap'); if(!wrap) return;
+    if(POP===key){ popClose(); return; }
+    POP=key;
+    var old=$('#artPop'); if(old) old.parentNode.removeChild(old);
+    var html='';
+    if(key==='tool'){
+      html='<b>연필</b>'+TOOLK.map(function(k){
+        return '<button type="button" data-tool="'+k+'" aria-pressed="'+(S.tool===k)+'"><i>'+TOOLS[k].ico+'</i>'+TOOLS[k].name+'</button>';
+      }).join('');
+    } else if(key==='size'){
+      html='<b>굵기</b>'+SIZES.map(function(z,i){
+        return '<button type="button" data-size="'+i+'" aria-pressed="'+(S.size===i)+'">'+z[0]+'</button>';
+      }).join('');
+    } else if(key==='dark'){
+      html='<b>진하기</b>'+DARK.map(function(z,i){
+        return '<button type="button" data-dark="'+i+'" aria-pressed="'+(S.dark===i)+'">'+z[0]+'</button>';
+      }).join('');
+    } else {
+      html='<b>더보기</b>'
+        + '<button type="button" data-act="bg" aria-pressed="'+(data.artBgOn==='1')+'">🖼 사진 깔기</button>'
+        + '<button type="button" data-act="guide" aria-pressed="'+(data.artGuideOn==='1')+'">⊞ 안내선</button>'
+        + '<button type="button" data-act="penonly" aria-pressed="'+penOnly+'">✒️ 펜만 받기</button>'
+        + '<button type="button" data-act="save">⬇ 그림 내려받기</button>'
+        + '<button type="button" data-act="clear">🗑 다 지우기</button>';
+    }
+    var el=document.createElement('div');
+    el.className='tpop'; el.id='artPop'; el.innerHTML=html;
+    wrap.appendChild(el);
+    var wr=wrap.getBoundingClientRect(), br=btn.getBoundingClientRect();
+    var pw=el.offsetWidth, ph=el.offsetHeight;
+    var narrow=window.matchMedia('(max-width:860px)').matches;
+    var x,y;
+    if(narrow){
+      x=(br.left-wr.left)+br.width/2-pw/2;
+      y=(br.top-wr.top)-ph-10;
+      if(y<4) y=(br.bottom-wr.top)+10;
+    } else {
+      x=(br.left-wr.left)-pw-10;
+      y=(br.top-wr.top)+br.height/2-ph/2;
+    }
+    el.style.left=Math.max(4,Math.min(wr.width-pw-4,x))+'px';
+    el.style.top =Math.max(4,Math.min(wr.height-ph-4,y))+'px';
+    paintTools();
   }
   function paintHelp(){
     var el=$('#artHelp'); if(!el) return;
-    el.innerHTML='<button type="button" class="sk-btn" data-act="bg" aria-pressed="'+(data.artBgOn==='1')+'">🖼 사진 깔기</button>'
-      + '<button type="button" class="sk-btn" data-act="guide" aria-pressed="'+(data.artGuideOn==='1')+'">⊞ 안내선</button>'
-      + '<button type="button" class="sk-btn" data-act="penonly" aria-pressed="'+penOnly+'">✒️ 펜만 받기</button>'
-      + '<button type="button" class="sk-btn" data-act="save">⬇ 그림 내려받기</button>'
-      + '<span class="penflag">'+(realP?'필압 켜짐':'필압 없음 · 속도로 진하기')+'</span>';
+    el.innerHTML='<span class="penflag">'+(realP?'필압 켜짐':'필압 없음 · 속도로 진하기')+'</span>';
   }
   function bindTools(){
-    var box=$('#artTools'), help=$('#artHelp');
-    function onClick(e){
-      var b=e.target.closest('button'); if(!b||b.disabled) return;
-      if(b.dataset.tool!=null && b.dataset.tool!==''){ S.tool=b.dataset.tool; paintTools(); return; }
-      if(b.dataset.size!=null && b.dataset.size!==''){ S.size=parseInt(b.dataset.size,10); paintTools(); return; }
-      if(b.dataset.dark!=null && b.dataset.dark!==''){ S.dark=parseInt(b.dataset.dark,10); paintTools(); return; }
+    var wrap=$('.drawwrap');
+    if(!wrap) return;
+    wrap.addEventListener('click',function(e){
+      var pb=e.target.closest('[data-pop]');
+      if(pb){ popOpen(pb.dataset.pop, pb); return; }
+      var b=e.target.closest('button');
+      if(!b||b.disabled){ if(!e.target.closest('#artPop')) popClose(); return; }
+      if(b.dataset.tool!=null && b.dataset.tool!==''){ S.tool=b.dataset.tool; popClose(); return; }
+      if(b.dataset.size!=null && b.dataset.size!==''){ S.size=parseInt(b.dataset.size,10); popClose(); return; }
+      if(b.dataset.dark!=null && b.dataset.dark!==''){ S.dark=parseInt(b.dataset.dark,10); popClose(); return; }
       var a=b.dataset.act;
-      if(a==='undo') undo();
-      else if(a==='redo') redo();
-      else if(a==='clear') clearAsk();
-      else if(a==='bg'){ data.artBgOn=(data.artBgOn==='1')?'0':'1'; save(); paintBg(); paintHelp(); }
-      else if(a==='guide'){ data.artGuideOn=(data.artGuideOn==='1')?'0':'1'; save(); paintGuide(); paintHelp(); }
-      else if(a==='penonly'){ penOnly=!penOnly; paintHelp(); toast(penOnly?'이제 펜으로만 그려져요.':'손가락으로도 그릴 수 있어요.'); }
-      else if(a==='save') downloadArt();
-    }
-    if(box) box.addEventListener('click',onClick);
-    if(help) help.addEventListener('click',onClick);
+      if(!a) return;
+      if(a==='undo'){ undo(); return; }
+      if(a==='redo'){ redo(); return; }
+      if(a==='zen'){ setZen(!zen); return; }
+      if(a==='clear'){ popClose(); clearAsk(); return; }
+      if(a==='bg'){ data.artBgOn=(data.artBgOn==='1')?'0':'1'; save(); paintBg(); popClose(); return; }
+      if(a==='guide'){ data.artGuideOn=(data.artGuideOn==='1')?'0':'1'; save(); paintGuide(); popClose(); return; }
+      if(a==='penonly'){ penOnly=!penOnly; popClose(); toast(penOnly?'이제 펜으로만 그려져요.':'손가락으로도 그릴 수 있어요.'); return; }
+      if(a==='save'){ popClose(); downloadArt(); return; }
+    });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&POP) popClose(); });
+  }
+
+  /* ---------- 크게 그리기 ---------- */
+  var zen=false;
+  function setZen(on){
+    zen=!!on;
+    var sl=$('.slide.draw'); if(sl) sl.classList.toggle('zen', zen);
+    paintTools();
+    fitPaper(); setTimeout(fitPaper,80);
+    if(zen) toast('크게 그리기예요. 다시 누르면 돌아가요.');
   }
 
   /* ---------- 배경 · 안내선 · 빛 화살표 ---------- */
@@ -3119,6 +3248,22 @@ var ART=(function(){
     paintTools(); paintBg(); paintGuide(); paintLight();
     fitPaper();
     setTimeout(fitPaper,60);
+    hintRoom();
+  }
+  /* 그릴 자리가 좁으면 한 번만 알려 준다 */
+  var hinted=false;
+  function hintRoom(){
+    if(hinted||zen) return;
+    var narrow=window.matchMedia('(max-width:860px)').matches;
+    var portrait=window.innerHeight>window.innerWidth;
+    var w=paper.getBoundingClientRect().width;
+    if(narrow && portrait && w<430){
+      hinted=true;
+      setTimeout(function(){ toast('화면을 가로로 돌리고 [크게]를 누르면 훨씬 크게 그릴 수 있어요.'); }, 900);
+    } else if(w<560){
+      hinted=true;
+      setTimeout(function(){ toast('오른쪽 [크게]를 누르면 종이가 화면 가득 커져요.'); }, 900);
+    }
   }
   function init(){
     setup();
@@ -3142,30 +3287,28 @@ var ART=(function(){
            hasSketch:function(){ return SKETCH_END>0; }, persist:function(){ persist(true); }, fit:fitPaper };
 })();
 
-/* 연필 소리 옆에 깔리는 조용한 곡 — C장조 · 64BPM · 8마디 반복
-   긴 여운의 패드 / 이따금 울리는 종소리 / 낮고 부드러운 베이스.
-   그리는 동안 켜 두는 것이라 타악기는 넣지 않았다. */
-var MU={ ctx:null, master:null, send:null, noise:null, timer:null, on:false, vol:0.28, step:0, next:0 };
-var MU_BPM=64, MU_STEP=60/MU_BPM/2, MU_GAIN=1.0;
+/* 통통 튀는 미술 시간 곡 — C장조 · 104BPM · 8마디 반복
+   마림바 멜로디 / 우쿨렐레풍 뜯는 화음 / 통통 뛰는 베이스 / 살짝 얹은 셰이커·스냅.
+   그리는 동안 켜 두는 것이라 음량은 낮게 잡았다. */
+var MU={ ctx:null, master:null, send:null, noise:null, timer:null, on:false, vol:0.34, step:0, next:0 };
+var MU_BPM=104, MU_STEP=60/MU_BPM/2, MU_GAIN=1.0;
 function mtof(m){ return 440*Math.pow(2,(m-69)/12); }
-/* [화음 구성음(7화음), 베이스] */
+/* [화음 구성음, 베이스] */
 var MU_CH={
-  C:  [[60,64,67,71],48],   Am: [[57,60,64,67],45],
-  F:  [[57,60,65,69],41],   G:  [[59,62,67,74],43],
-  Em: [[59,64,67,71],40],   Dm: [[57,62,65,69],38]
+  C:  [[60,64,67],48], Am: [[57,60,64],45], F:  [[57,60,65],41],
+  G:  [[59,62,67],43], Em: [[59,64,67],40], Dm: [[57,62,65],38]
 };
-/* 마디별 화음 — 여덟 마디가 천천히 돈다 */
-var MU_PROG=['C','Am','F','G','Em','Am','Dm','G'];
-/* 마디별 종소리(8분음표 자리, null=쉼) — 아주 성기게 */
+var MU_PROG=['C','Am','F','G','C','Em','F','G'];
+/* 마디별 8분음표 멜로디(MIDI 번호, null=쉼) — 깡충깡충 뛰도록 엇박을 섞었다 */
 var MU_MEL=[
-  [79,null,null,null,76,null,null,null],
-  [null,null,72,null,null,null,null,null],
-  [77,null,null,null,81,null,null,null],
-  [null,null,74,null,null,null,79,null],
-  [76,null,null,null,71,null,null,null],
-  [null,null,72,null,null,null,null,null],
-  [74,null,null,null,69,null,null,null],
-  [null,null,71,null,null,null,null,null]
+  [79,null,76,77,72,null,76,null],
+  [81,null,79,null,76,null,72,null],
+  [77,null,81,null,84,83,81,null],
+  [79,null,74,null,79,null,81,null],
+  [84,null,81,null,79,77,76,null],
+  [83,null,79,null,76,null,79,null],
+  [81,null,77,null,81,83,84,null],
+  [79,null,76,null,72,null,74,null]
 ];
 
 function muBuild(given){
@@ -3297,20 +3440,24 @@ function muSnap(t){
 function muPlayStep(i, t){
   var bar=Math.floor(i/8)%8, st=i%8, loop=Math.floor(i/64);
   var ch=MU_CH[MU_PROG[bar]];
-  /* 마디마다 한 번, 긴 패드 */
-  if(st===0) muPad(ch[0], t, MU_STEP*8.4, 1);
-  /* 베이스는 마디 앞과 중간에만, 아주 부드럽게 */
-  if(st===0) muBass(ch[1], t, MU_STEP*5.5);
-  if(st===4) muBass(ch[1]+7, t, MU_STEP*3.0);
-  /* 화음 뜯기는 두 마디에 한 번 */
-  if(st===0 && bar%2===0) muPluck(ch[0].slice(0,3), t, 0.5);
-  /* 종소리 — 두 번째 바퀴마다 앞 네 마디는 쉰다 */
+  /* 베이스가 통통 뛴다 — 으뜸음, 5도 위, 한 옥타브 위로 콩 */
+  if(st===0) muBass(ch[1], t, MU_STEP*1.7);
+  if(st===3) muBass(ch[1]+7, t, MU_STEP*1.2);
+  if(st===4) muBass(ch[1], t, MU_STEP*1.7);
+  if(st===6) muBass(ch[1]+12, t, MU_STEP*1.0);
+  /* 화음은 엇박에 가볍게 */
+  if(st===2 || st===6) muPluck(ch[0], t, st===2 ? 0.85 : 0.6);
+  /* 살짝 얹는 타악 */
+  if(st===0 || st===4) muKick(t);
+  if(st===4) muSnap(t);
+  muShaker(t, st%2===1 ? 0.7 : 0.4);
+  /* 멜로디 — 두 바퀴마다 앞 네 마디는 쉬어 반복감을 줄인다 */
   var rest = (loop%2===1 && bar<4);
   var mel=MU_MEL[bar][st];
   if(mel!==null && !rest){
     var k=1;
-    while(k<6 && st+k<8 && MU_MEL[bar][st+k]===null) k++;
-    muMarimba(mel, t, k*MU_STEP, st===0 ? 0.62 : 0.48);
+    while(k<4 && st+k<8 && MU_MEL[bar][st+k]===null) k++;
+    muMarimba(mel, t, k*MU_STEP, st%2===0 ? 1 : 0.8);
   }
 }
 function muSchedule(){
