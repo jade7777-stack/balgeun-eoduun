@@ -862,6 +862,14 @@ dialog{border:0!important;border-radius:22px!important;box-shadow:0 24px 60px rg
   .land-art img{padding:10px 10px 40px}
 }
 
+/* 좁은 화면에서는 머리글 옆 비버샘을 빼 둔다.
+   화면을 내리면 위 막대 밑으로 반쯤 잘려 들어가 글을 가리는 것처럼 보이고,
+   세로 공간도 아깝다. 표지의 비버샘은 그림 안에 있으므로 그대로 둔다. */
+@media (max-width:860px){
+  .bv-side,.bv-inline{display:none!important}
+  .head-row-bv{display:block}
+}
+
 </style>
 </head>
 <body>
