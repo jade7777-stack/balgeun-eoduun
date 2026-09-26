@@ -576,10 +576,21 @@ body>.toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 .ctrl input[type=range]{width:100%;margin:0}
 .ctrl output{font-weight:900;font-size:.86rem;color:var(--terra)}
 .light-toggles{display:flex;gap:8px;flex-wrap:wrap}
-.cube3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
-.cube3 figure{margin:0;border:2px solid var(--navy);background:#fff}
-.cube3 img{display:block;width:100%;height:auto}
-.cube3 figcaption{padding:6px 8px;border-top:2px solid var(--navy);font-weight:900;font-size:.82rem;text-align:center;background:var(--cream)}
+/* 화면에 그리기 / 종이에 그려 사진 올리기 — 두 길을 모두 연다 */
+.drawmode{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.dmbtn{border:2px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:5px 11px;font-weight:800;font-size:.78rem;cursor:pointer;line-height:1.2}
+.dmbtn.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.paperagain{border:2px dashed var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:5px 10px;font-weight:800;font-size:.76rem;cursor:pointer}
+.paperpick{position:absolute;inset:0;z-index:4;display:grid;align-content:center;justify-items:center;gap:10px;text-align:center;padding:18px;background:rgba(255,253,248,.96)}
+.paperpick b{font-size:1.02rem;color:var(--ink)}
+.paperpick p{margin:0;color:var(--muted);font-size:.85rem;line-height:1.5}
+.paperpick .ways{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+@media (max-width:640px){ .dmbtn{padding:7px 11px;font-size:.8rem} .paperpick b{font-size:.94rem} }
+.cube3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px;align-items:stretch}
+/* 사진 세 장은 원본 비율이 달라도 같은 높이로 맞춘다 — 비교가 목적이라 키가 어긋나면 안 된다 */
+.cube3 figure{margin:0;border:2px solid var(--navy);background:#fff;display:flex;flex-direction:column}
+.cube3 img{display:block;width:100%;height:clamp(120px,16vw,210px);object-fit:contain;padding:6px;box-sizing:border-box;background:#fff}
+.cube3 figcaption{margin-top:auto;padding:6px 8px;border-top:2px solid var(--navy);font-weight:900;font-size:.82rem;text-align:center;background:var(--cream)}
 .dirgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-width:320px;margin-top:10px}
 .dirgrid button{border:2px solid var(--navy);background:var(--paper);font-size:1.2rem;font-weight:900;padding:10px 0;line-height:1}
 .dirgrid button[aria-pressed=true]{background:var(--terra);color:#fff}
@@ -1254,12 +1265,25 @@ dialog{border:0!important;border-radius:22px!important;box-shadow:0 24px 60px rg
             <div class="artguide" id="artGuide" hidden aria-hidden="true"></div>
             <div class="artlight" id="artLight" hidden aria-hidden="true"><span></span><b>빛</b></div>
             <div class="artempty" id="artEmpty">여기에 그려요</div>
+            <div class="paperpick" id="paperPick" hidden>
+              <b>종이에 그린 그림을 사진으로 올려요</b>
+              <p>책상 위에 평평하게 두고, 그림자가 지지 않게 위에서 찍으면 잘 나와요.<br>올린 사진 위에 연필로 명암을 더 얹어도 됩니다.</p>
+              <div class="ways">
+                <label class="way-btn" data-cam="paper"><span class="way-ico" aria-hidden="true">📷</span><span>사진 찍기</span><input class="pick" type="file" accept="image/*" capture="environment" data-capture="paper"></label>
+                <label class="way-btn"><span class="way-ico" aria-hidden="true">🖼️</span><span>사진 올리기</span><input class="pick" type="file" accept="image/*" data-photo="paper"></label>
+              </div>
+            </div>
           </div>
           </div>
           <div class="drawtools" id="artTools"></div>
         </div>
 
         <div class="drawfoot">
+          <div class="drawmode" id="drawMode">
+            <button type="button" class="dmbtn on" data-dm="screen">✏️ 화면에</button>
+            <button type="button" class="dmbtn" data-dm="paper">📄 종이에 그렸어요</button>
+            <button type="button" class="paperagain" id="paperAgain" hidden>↺ 사진 다시</button>
+          </div>
           <div class="drawhelp" id="artHelp"></div>
           <span class="save-state" aria-live="polite"></span>
           <span class="bar-spacer"></span>
@@ -2039,7 +2063,7 @@ function starText(){
 /* 그림은 획 목록에서 그때그때 다시 그린다 — 같은 상태면 다시 만들지 않는다 */
 var ARTCACHE={ key:'', sketch:'', shade:'' };
 function artShots(){
-  var key=ART.count()+':'+(ART.hasSketch()?1:0);
+  var key=ART.count()+':'+(ART.hasSketch()?1:0)+':'+(ART.bgKey?ART.bgKey():'');
   if(ARTCACHE.key!==key){
     ARTCACHE={ key:key, sketch:ART.snapshot('sketch',900), shade:ART.snapshot('shade',900) };
   }
@@ -2614,7 +2638,7 @@ var ART=(function(){
     hb:     { name:'연필',     ico:'✏️', alpha:0.34, rad:6.2,  grain:0.20, tooth:0.42, jit:0.16, pow:1.30, min:0.32 },
     soft:   { name:'진한 연필', ico:'🖊️', alpha:0.50, rad:8.6,  grain:0.16, tooth:0.30, jit:0.13, pow:1.10, min:0.40 },
     broad:  { name:'넓은 심',   ico:'🩶', alpha:0.26, rad:20.0, grain:0.28, tooth:0.60, jit:0.22, pow:0.95, min:0.50 },
-    eraser: { name:'지우개',   ico:'🧽', alpha:1.00, rad:16.0, grain:0.00, tooth:0,    jit:0,    pow:1.00, min:0.60 }
+    eraser: { name:'지우개',   ico:'🧽', alpha:1.00, rad:26.0, grain:0.00, tooth:0,    jit:0,    pow:1.00, min:1.00 }
   };
   var TOOLK=['hb','soft','broad','eraser'];
   var SIZES=[['가늘게',0.62],['보통',1.0],['굵게',1.7]];
@@ -2685,6 +2709,42 @@ var ART=(function(){
     ctx.restore();
   }
 
+  /* ---------- 지우개 ----------
+     연필 도장을 그대로 쓰면 가장자리가 반쯤만 지워져 얼룩이 남는다.
+     지우개는 둥근 선 하나로 꽉 채워 긋고, 필압과 상관없이 한 번에 지운다.
+     화면에서는 종이색으로 보여 주고(지워지는 것처럼), 획이 끝나면
+     같은 모양 그대로 destination-out 으로 오려 낸다. */
+  var ERASE_PAINT='#FFFDF8';
+  function renderEraser(ctx, st, sx, sy){
+    var t=TOOLS.eraser;
+    var r=t.rad*SIZES[st.s!=null?st.s:1][1];
+    var pts=st.pts, bb=[1e9,1e9,-1e9,-1e9];
+    sx=sx||1; sy=sy||sx;
+    ctx.save();
+    ctx.globalCompositeOperation='source-over';
+    ctx.globalAlpha=1;
+    ctx.strokeStyle=ERASE_PAINT; ctx.fillStyle=ERASE_PAINT;
+    ctx.lineWidth=2*r*sx; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x*sx, pts[0].y*sy);
+    if(pts.length===1){
+      ctx.arc(pts[0].x*sx, pts[0].y*sy, r*sx, 0, Math.PI*2);
+      ctx.fill();
+    } else {
+      for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i].x*sx, pts[i].y*sy);
+      ctx.stroke();
+    }
+    ctx.restore();
+    for(var j=0;j<pts.length;j++){
+      var x=pts[j].x, y=pts[j].y;
+      if(x-r<bb[0]) bb[0]=x-r;
+      if(y-r<bb[1]) bb[1]=y-r;
+      if(x+r>bb[2]) bb[2]=x+r;
+      if(y+r>bb[3]) bb[3]=y+r;
+    }
+    return bb;
+  }
+
   /* ---------- 한 획 그리기(공통) ---------- */
   /* pts: [{x,y,p,tilt}] · 화면에 그릴 때와 다시 그릴 때가 똑같아야 한다 */
   function renderStroke(target, st, sx, sy, dot){
@@ -2695,6 +2755,7 @@ var ART=(function(){
     sx=sx||1; sy=sy||sx;
     var buf, ctx;
     if(target.own){ ctx=target.ctx; } else { ctx=target.ctx; }
+    if(st.t==='eraser') return renderEraser(ctx, st, sx, sy);
     function stamp(a,b){
       var rA=r0*(t.min+(1-t.min)*Math.pow(a.p,0.55))*(1+0.9*(a.tilt||0));
       var rB=r0*(t.min+(1-t.min)*Math.pow(b.p,0.55))*(1+0.9*(b.tilt||0));
@@ -2912,7 +2973,7 @@ var ART=(function(){
     if(!ready) return;
     var wrap=$('.drawwrap'); if(!wrap) return;
     var rail=$('#artTools'), sl=$('.slide.draw');
-    var top=$('.drawtop'), foot=$('.drawfoot');
+    var top=$('.drawtop'), foot=$('.drawfoot'), mode=$('#drawMode');
     var narrow=window.matchMedia('(max-width:860px)').matches;
     var wr=wrap.getBoundingClientRect();
     function hOf(el){ return el ? el.getBoundingClientRect().height : 0; }
@@ -3039,6 +3100,7 @@ var ART=(function(){
   /* ---------- 크게 그리기 ---------- */
   var zen=false;
   function setZen(on){
+    var dm=$('#drawMode'); if(dm) dm.hidden=!!on;
     zen=!!on;
     var sl=$('.slide.draw'); if(sl) sl.classList.toggle('zen', zen);
     paintTools();
@@ -3046,21 +3108,58 @@ var ART=(function(){
     if(zen) toast('크게 그리기예요. 다시 누르면 돌아가요.');
   }
 
+  /* ---------- 종이에 그린 그림 ----------
+     화면에서 그려도 되고, 종이에 그린 뒤 사진으로 올려도 된다.
+     사진은 종이 밑에 깔리고, 그 위에 연필로 명암을 더 얹을 수 있다.
+     카드·인쇄·내려받기도 모두 이 사진을 같이 담는다. */
+  var PHOTOIMG=null, PHOTOSRC=null;
+  function paperMode(){ return data.drawMode==='paper'; }
+  function photoReady(){ return !!(paperMode() && PHOTOIMG && PHOTOIMG.complete && PHOTOIMG.naturalWidth); }
+  function syncPhoto(cb){
+    var src = paperMode() ? (data.paper||'') : '';
+    if(src===PHOTOSRC){ if(cb) cb(); return; }
+    PHOTOSRC=src;
+    if(!src){ PHOTOIMG=null; if(cb) cb(); return; }
+    var im=new Image();
+    im.onload=function(){ if(PHOTOSRC===src){ PHOTOIMG=im; } if(cb) cb(); };
+    im.onerror=function(){ if(PHOTOSRC===src){ PHOTOIMG=null; } if(cb) cb(); };
+    im.src=src;
+  }
+  function drawPhotoInto(ctx,w,h){
+    if(!photoReady()) return false;
+    var r=Math.min(w/PHOTOIMG.naturalWidth, h/PHOTOIMG.naturalHeight)*0.98;
+    var iw=PHOTOIMG.naturalWidth*r, ih=PHOTOIMG.naturalHeight*r;
+    ctx.drawImage(PHOTOIMG,(w-iw)/2,(h-ih)/2,iw,ih);
+    return true;
+  }
+  function paintPaperUI(){
+    var pick=$('#paperPick'), again=$('#paperAgain'), empty=$('#artEmpty');
+    var on=paperMode(), has=on && !!data.paper;
+    $$('.dmbtn').forEach(function(b){ b.classList.toggle('on',(b.dataset.dm==='paper')===on); });
+    if(pick) pick.hidden = !(on && !data.paper);
+    if(again) again.hidden = !has;
+    if(empty && on) empty.hidden = true;
+  }
+
   /* ---------- 배경 · 안내선 · 빛 화살표 ---------- */
   function paintBg(){
     if(!ready) return;
-    bgc.clearRect(0,0,W,H);
-    if(data.artBgOn!=='1') return;
-    var src=data.obj; if(!src) return;
-    var im=new Image();
-    im.onload=function(){
-      var r=Math.min(W/im.width,H/im.height)*0.94;
-      var w=im.width*r, h=im.height*r;
-      bgc.save(); bgc.globalAlpha=0.30;
-      bgc.drawImage(im,(W-w)/2,(H-h)/2,w,h);
-      bgc.restore();
-    };
-    im.src=src;
+    syncPhoto(function(){
+      bgc.clearRect(0,0,W,H);
+      paintPaperUI();
+      if(paperMode()){ drawPhotoInto(bgc,W,H); return; }
+      if(data.artBgOn!=='1') return;
+      var src=data.obj; if(!src) return;
+      var im=new Image();
+      im.onload=function(){
+        var r=Math.min(W/im.width,H/im.height)*0.94;
+        var w=im.width*r, h=im.height*r;
+        bgc.save(); bgc.globalAlpha=0.30;
+        bgc.drawImage(im,(W-w)/2,(H-h)/2,w,h);
+        bgc.restore();
+      };
+      im.src=src;
+    });
   }
   function paintGuide(){ var g=$('#artGuide'); if(g) g.hidden = data.artGuideOn!=='1'; }
   function paintLight(){
@@ -3092,8 +3191,21 @@ var ART=(function(){
       nx.textContent='명암까지 다 그렸어요 →';
       S.tool='soft';
     }
+    if(paperMode()){
+      if(n===1){
+        eb.textContent='1단계 · 종이에 그린 밑그림 올리기';
+        ti.textContent='종이에 그렸어도 괜찮아요';
+        sb.textContent='종이에 그린 밑그림을 사진으로 올려요. 위에서 평평하게 찍으면 잘 나와요.';
+        nx.textContent='사진 올렸어요 → 명암 넣기';
+      } else {
+        eb.textContent='2단계 · 빛의 방향을 생각하며 명암 표시하기';
+        ti.textContent='종이 위든 화면 위든';
+        sb.textContent='올린 사진 위에 바로 명암을 얹어도 되고, 종이에 명암까지 그린 뒤 사진을 다시 올려도 돼요.';
+        nx.textContent='명암까지 다 그렸어요 →';
+      }
+    }
     data.artStep=String(n); save();
-    paintTools(); paintLight();
+    paintTools(); paintLight(); paintPaperUI();
   }
   function goStep2(){
     if(step===1){ SKETCH_END=STROKES.length; markDirty(); }
@@ -3119,6 +3231,7 @@ var ART=(function(){
     out.width=Math.round(W*r); out.height=Math.round(H*r);
     var c=out.getContext('2d');
     c.fillStyle='#FFFEF9'; c.fillRect(0,0,out.width,out.height);
+    drawPhotoInto(c, out.width, out.height);
     var layer=document.createElement('canvas');
     layer.width=out.width; layer.height=out.height;
     var lc=layer.getContext('2d');
@@ -3129,9 +3242,9 @@ var ART=(function(){
     return out;
   }
   function snapshotURL(which, maxW){
-    if(!STROKES.length) return '';
-    var upto = which==='sketch' ? (SKETCH_END||STROKES.length) : STROKES.length;
-    if(which==='sketch' && !SKETCH_END) return '';
+    if(!STROKES.length && !photoReady()) return '';
+    var upto = which==='sketch' ? (SKETCH_END||(photoReady()?0:STROKES.length)) : STROKES.length;
+    if(which==='sketch' && !SKETCH_END && !photoReady()) return '';
     var cv=renderInto(upto, maxW||900);
     var url='';
     try{ url=cv.toDataURL('image/jpeg',0.82); }catch(e){}
@@ -3142,7 +3255,7 @@ var ART=(function(){
   /* ---------- 그림 내려받기 ---------- */
   /* 아이패드 사파리는 한동안 안 열면 저장한 것을 지운다 — 차시 끝에 꼭 내려받게 한다 */
   function downloadArt(){
-    if(!STROKES.length){ toast('아직 그린 것이 없어요.'); return; }
+    if(!STROKES.length && !photoReady()){ toast('아직 그린 것이 없어요.'); return; }
     var cv=renderInto(null, 1400);
     var who=[data.klass,data.team,data.name].filter(function(v){return String(v||'').trim();}).join('_')||'내그림';
     var fname='밝은쪽어두운쪽_'+who+'.png';
@@ -3276,6 +3389,18 @@ var ART=(function(){
     });
     var nx=$('#artNextStep');
     if(nx) nx.addEventListener('click',nextStep);
+    $$('.dmbtn').forEach(function(b){
+      b.addEventListener('click',function(){
+        var want=(b.dataset.dm==='paper')?'paper':'';
+        if(data.drawMode===want) return;
+        data.drawMode=want; save();
+        paintBg(); setStep(step); paintTools();
+        try{ ARTCACHE.key=null; paintBeforeAfter(); refreshCard(); }catch(e){}
+        toast(want==='paper' ? '종이에 그린 그림을 사진으로 올려요.' : '화면에 연필로 그려요.');
+      });
+    });
+    var pa=$('#paperAgain');
+    if(pa) pa.addEventListener('click',function(){ var pk=$('#paperPick'); if(pk) pk.hidden=false; });
     var fitT=null;
     window.addEventListener('resize',function(){ clearTimeout(fitT); fitT=setTimeout(fitPaper,80); });
     window.addEventListener('pagehide',function(){ persist(true); });
@@ -3284,7 +3409,8 @@ var ART=(function(){
 
   return { init:init, activate:activate, clearAll:clearAll, refreshBg:paintBg, refreshLight:paintLight,
            snapshot:snapshotURL, count:function(){ return STROKES.length; },
-           hasSketch:function(){ return SKETCH_END>0; }, persist:function(){ persist(true); }, fit:fitPaper };
+           hasSketch:function(){ return SKETCH_END>0; }, persist:function(){ persist(true); }, fit:fitPaper,
+           bgKey:function(){ return paperMode() ? ('p'+((data.paper||'').length)) : 's'; } };
 })();
 
 /* 통통 튀는 미술 시간 곡 — C장조 · 104BPM · 8마디 반복
@@ -3547,7 +3673,11 @@ window.addEventListener('storage',function(e){
 });
 
 /* ============ 사진이 바뀌면 그리기 화면 배경도 ============ */
-function artBgRefresh(){ try{ ART.refreshBg(); }catch(e){} }
+function artBgRefresh(){
+  try{ ART.refreshBg(); }catch(e){}
+  try{ ARTCACHE.key=null; paintBeforeAfter(); }catch(e){}
+  try{ refreshCard(); }catch(e){}
+}
 
 /* ============ 시작 ============ */
 bindFields();
