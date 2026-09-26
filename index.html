@@ -568,8 +568,17 @@ body>.toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 
 /* 빛 실험실 */
 .lightlab{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(220px,1fr);gap:16px;margin-top:14px;align-items:start}
-.lightstage{border:2px solid var(--navy);background:#1D1F2E;overflow:hidden}
+.lightstage{border:2px solid var(--navy);background:#1D1F2E;overflow:hidden;position:relative}
 .lightstage canvas{display:block;width:100%;height:auto}
+/* 3D 실험실 — three.js 가 뜨면 2D 그림 대신 이 캔버스를 쓴다(못 뜨면 2D 그대로) */
+.lightstage.is3d{aspect-ratio:900/560}
+.lightstage.is3d #lightCv{display:none}
+#lab3d{width:100%;height:100%;touch-action:none;cursor:grab}
+#lab3d:active{cursor:grabbing}
+.lab3d-labels{position:absolute;inset:0;pointer-events:none;z-index:2}
+.lab3d-labels b{position:absolute;transform:translate(-50%,-50%);background:rgba(255,253,248,.93);border:2px solid var(--navy);border-radius:999px;padding:3px 9px;font-size:.74rem;font-weight:900;color:var(--ink);white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.lab3d-tip{position:absolute;left:10px;bottom:8px;margin:0;z-index:2;color:#F1EADA;font-size:.74rem;font-weight:700;background:rgba(29,31,46,.6);padding:4px 10px;border-radius:999px}
+@media (max-width:640px){ .lab3d-labels b{font-size:.68rem;padding:2px 7px} }
 .lightside{display:grid;gap:12px}
 .ctrl{display:grid;gap:6px;border:2px solid var(--navy);background:var(--paper);padding:10px 12px}
 .ctrl label{font-weight:900;font-size:.88rem}
@@ -1150,8 +1159,11 @@ dialog{border:0!important;border-radius:22px!important;box-shadow:0 24px 60px rg
         </div>
 
         <div class="lightlab">
-          <div class="lightstage">
+          <div class="lightstage" id="lightStage">
             <canvas id="lightCv" width="900" height="560" aria-label="빛의 방향에 따라 밝기가 달라지는 입체 도형"></canvas>
+            <canvas id="lab3d" hidden aria-label="빛의 방향에 따라 밝기가 달라지는 입체 도형 (돌려 볼 수 있어요)"></canvas>
+            <div class="lab3d-labels" id="lab3dLabels" hidden aria-hidden="true"></div>
+            <p class="lab3d-tip" id="lab3dTip" hidden>끌어서 돌려 볼 수 있어요</p>
           </div>
           <div class="lightside">
             <div class="ctrl">
@@ -1740,6 +1752,7 @@ function lightDraw(){
 
   var out=$('#lightDegOut'); if(out) out.textContent=dirName(L.deg);
   var out2=$('#lightDistOut'); if(out2) out2.textContent = L.dist<28?'아주 가까이':(L.dist<60?'보통':'멀리');
+  if(window.LAB3D && LAB3D.ready) LAB3D.apply(L, LIGHT.shape, data.lightLabels!=='off');
   var read=$('#lightRead');
   if(read){
     var opp=dirName(L.deg+180);
@@ -3700,6 +3713,249 @@ window.addEventListener('resize',function(){
   if(id==='terms') termLayout();
 });
 
+})();
+</script>
+
+<!-- ============ 3D 빛 실험실 ============
+     three.js 를 CDN 에서 불러와 실험실 그림을 3D 장면으로 바꾼다.
+     학교 망에서 CDN 이 막히면 이 블록은 조용히 실패하고, 앞의 2D 실험실이 그대로 쓰인다. -->
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+(function(){
+  var canvas=document.getElementById('lab3d');
+  var stage=document.getElementById('lightStage');
+  var labelBox=document.getElementById('lab3dLabels');
+  var tip=document.getElementById('lab3dTip');
+  if(!canvas||!stage) return;
+
+  var SHAPES={
+    sphere:{ radius:1.34, centerY:1.315, contact:0.62, side:1.34, half:1.34 },
+    cube:  { radius:1.42, centerY:1.150, contact:0.86, side:1.175, half:1.175 },
+    cyl:   { radius:1.30, centerY:1.275, contact:0.72, side:1.18, half:1.30 }
+  };
+  var LABELS=[['bright','밝은 부분'],['dark','어두운 부분'],['refl','반사광'],['shadow','그림자']];
+
+  var renderer, scene, camera, controls, subject, subjectMat, keyLight, lightVisual, guide, contact, cameraFill;
+  var target=new THREE.Vector3(0,1.315,0);
+  var shape='sphere', running=false, raf=0, labelsOn=true, chips={}, needsRender=true;
+
+  function build(){
+    renderer=new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:false});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.12;
+
+    scene=new THREE.Scene();
+    scene.background=new THREE.Color(0x1d1f2e);
+    scene.fog=new THREE.Fog(0x1d1f2e, 13, 26);
+
+    camera=new THREE.PerspectiveCamera(42,1,0.1,100);
+    camera.position.set(4.6,4.6,9.4);
+
+    controls=new OrbitControls(camera, canvas);
+    controls.enableDamping=true; controls.dampingFactor=0.08;
+    controls.enablePan=false; controls.enableZoom=false;
+    controls.target.copy(target);
+    controls.minDistance=6.2; controls.maxDistance=13;
+    controls.minPolarAngle=0.2; controls.maxPolarAngle=Math.PI*0.48;
+    controls.addEventListener('change', function(){ needsRender=true; });
+
+    scene.add(new THREE.HemisphereLight(0xdce7ed, 0x51483d, 0.7));
+    var fill=new THREE.DirectionalLight(0xb8cbd5, 0.18); fill.position.set(-4,2,-4); scene.add(fill);
+    scene.add(new THREE.AmbientLight(0xfff0d7, 0.09));
+    cameraFill=new THREE.DirectionalLight(0xc8d9e2, 0.22);
+    cameraFill.target.position.copy(target);
+    scene.add(cameraFill, cameraFill.target);
+
+    var floor=new THREE.Mesh(new THREE.PlaneGeometry(28,28),
+      new THREE.MeshStandardMaterial({color:0x8f8577, roughness:0.95, metalness:0}));
+    floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+
+    var sc=document.createElement('canvas'); sc.width=sc.height=128;
+    var sx=sc.getContext('2d');
+    var g=sx.createRadialGradient(64,64,3,64,64,62);
+    g.addColorStop(0,'rgba(24,20,16,.55)'); g.addColorStop(0.38,'rgba(24,20,16,.32)'); g.addColorStop(1,'rgba(24,20,16,0)');
+    sx.fillStyle=g; sx.fillRect(0,0,128,128);
+    var tex=new THREE.CanvasTexture(sc); tex.colorSpace=THREE.SRGBColorSpace;
+    contact=new THREE.Mesh(new THREE.PlaneGeometry(3,1.35),
+      new THREE.MeshBasicMaterial({map:tex, transparent:true, opacity:0.72, depthWrite:false, toneMapped:false}));
+    contact.rotation.x=-Math.PI/2; contact.position.y=0.022; contact.renderOrder=1; scene.add(contact);
+
+    subjectMat=new THREE.MeshStandardMaterial({color:0xe9ddc8, roughness:0.7, metalness:0.02});
+    makeSubject(shape);
+
+    keyLight=new THREE.PointLight(0xffddb0, 145, 25, 2);
+    keyLight.castShadow=true;
+    keyLight.shadow.mapSize.set(1024,1024);
+    keyLight.shadow.bias=-0.0008; keyLight.shadow.normalBias=0.03;
+    scene.add(keyLight);
+
+    lightVisual=new THREE.Group();
+    lightVisual.add(new THREE.Mesh(new THREE.SphereGeometry(0.16,24,16), new THREE.MeshBasicMaterial({color:0xffe59c})));
+    lightVisual.add(new THREE.Mesh(new THREE.SphereGeometry(0.29,24,16),
+      new THREE.MeshBasicMaterial({color:0xffd872, transparent:true, opacity:0.2, depthWrite:false})));
+    for(var i=0;i<3;i++){
+      var ring=new THREE.Mesh(new THREE.TorusGeometry(0.29,0.012,8,48),
+        new THREE.MeshBasicMaterial({color:0xffe9a6, transparent:true, opacity:0.7}));
+      ring.rotation.set(i===1?Math.PI/2:0, i===2?Math.PI/2:0, 0);
+      lightVisual.add(ring);
+    }
+    scene.add(lightVisual);
+
+    guide=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      new THREE.LineDashedMaterial({color:0xffdf91, transparent:true, opacity:0.45, dashSize:0.18, gapSize:0.12}));
+    guide.computeLineDistances(); scene.add(guide);
+
+    LABELS.forEach(function(p){
+      var b=document.createElement('b'); b.textContent=p[1]; b.dataset.k=p[0];
+      labelBox.appendChild(b); chips[p[0]]=b;
+    });
+  }
+
+  function makeSubject(key){
+    var cfg=SHAPES[key]||SHAPES.sphere;
+    if(subject){ scene.remove(subject); subject.geometry.dispose(); }
+    var geo;
+    if(key==='cube') geo=new THREE.BoxGeometry(2.35,2.35,2.35,4,4,4);
+    else if(key==='cyl') geo=new THREE.CylinderGeometry(1.18,1.18,2.6,64,8);
+    else geo=new THREE.SphereGeometry(1.34,96,64);
+    target.y=cfg.centerY;
+    controls.target.copy(target); controls.update();
+    cameraFill.target.position.copy(target); cameraFill.target.updateMatrixWorld();
+    contact.scale.setScalar(cfg.contact);
+    subject=new THREE.Mesh(geo, subjectMat);
+    subject.position.copy(target);
+    subject.castShadow=true; subject.receiveShadow=true;
+    scene.add(subject);
+    needsRender=true;
+  }
+
+  function resize(){
+    var w=stage.clientWidth||900, h=Math.round(w*560/900);
+    renderer.setSize(w,h,false);
+    camera.aspect=w/Math.max(1,h); camera.updateProjectionMatrix();
+    needsRender=true;
+  }
+
+  /* 2D 실험실과 같은 상태(방향 0~359, 거리 0~100)를 3D 좌표로 옮긴다 */
+  var lightPos=new THREE.Vector3(), tmp=new THREE.Vector3();
+  function apply(L, shapeKey, showLabels){
+    if(shapeKey && shapeKey!==shape){ shape=shapeKey; makeSubject(shape); }
+    labelsOn=!!showLabels;
+    labelBox.hidden=!labelsOn;
+    var a=(L.deg||0)*Math.PI/180;
+    var dir=new THREE.Vector3(Math.cos(a), Math.max(-0.28, Math.sin(a)*0.95), 0.62).normalize();
+    var d=2.9+(L.dist/100)*2.6;
+    lightPos.copy(dir).multiplyScalar(d); lightPos.y+=target.y;
+    if(lightPos.y<0.45) lightPos.y=0.45;
+    keyLight.position.copy(lightPos);
+    keyLight.intensity=125*Math.pow(d/4.0,1.35);
+    lightVisual.position.copy(lightPos);
+    var gp=guide.geometry.attributes.position;
+    gp.setXYZ(0,lightPos.x,lightPos.y,lightPos.z);
+    gp.setXYZ(1,target.x,target.y,target.z);
+    gp.needsUpdate=true; guide.computeLineDistances();
+    needsRender=true;
+  }
+
+  /* 이름표는 화면에 뿌린 뒤 서로 겹치지 않게 살짝 밀어낸다 */
+  var camDir=new THREE.Vector3(), centerPt=new THREE.Vector3();
+  function toScreen(v){
+    tmp.copy(v).project(camera);
+    return { x:(tmp.x*0.5+0.5)*canvas.clientWidth, y:(-tmp.y*0.5+0.5)*canvas.clientHeight, z:tmp.z };
+  }
+  function placeLabels(){
+    if(!labelsOn) return;
+    var cfg=SHAPES[shape]||SHAPES.sphere;
+    var w=canvas.clientWidth, h=canvas.clientHeight;
+    var n=new THREE.Vector3().copy(keyLight.position).sub(target).normalize();
+    camera.getWorldDirection(camDir);          /* 카메라가 보는 방향 */
+    var toCam=camDir.clone().negate();          /* 카메라 쪽 */
+    var r=cfg.radius*0.95;
+    function surf(dirv){ return new THREE.Vector3().copy(target).addScaledVector(dirv.normalize(), r); }
+    var pts={};
+    pts.bright = surf(n.clone().addScaledVector(toCam,0.45));
+    pts.dark   = surf(n.clone().negate().addScaledVector(toCam,0.75));
+    pts.refl   = surf(n.clone().negate().multiplyScalar(0.7).add(new THREE.Vector3(0,-1.05,0)).addScaledVector(toCam,0.5));
+    var sh=new THREE.Vector3(-n.x,0,-n.z);
+    if(sh.lengthSq()<0.0004) sh.set(0,0,-1);
+    sh.normalize().multiplyScalar(cfg.radius*1.6);
+    pts.shadow = new THREE.Vector3(target.x+sh.x, 0.05, target.z+sh.z);
+
+    centerPt.copy(target);
+    var cs=toScreen(centerPt);
+    var list=[];
+    Object.keys(pts).forEach(function(k){
+      var p=toScreen(pts[k]);
+      /* 도형 가운데에서 바깥쪽으로 조금 더 밀어 낸다 */
+      var dx=p.x-cs.x, dy=p.y-cs.y, len=Math.hypot(dx,dy)||1;
+      p.x+=dx/len*22; p.y+=dy/len*16;
+      p.k=k; list.push(p);
+    });
+    /* 세로로 겹치면 아래쪽 것을 내린다 */
+    list.sort(function(a,b){ return a.y-b.y; });
+    for(var i=1;i<list.length;i++){
+      var gap=list[i].y-list[i-1].y;
+      if(gap<26 && Math.abs(list[i].x-list[i-1].x)<96) list[i].y=list[i-1].y+26;
+    }
+    list.forEach(function(p){
+      var b=chips[p.k]; if(!b) return;
+      var out = p.z>1 || p.x<14 || p.y<12 || p.x>w-14 || p.y>h-12;
+      if(w<380 && p.k==='refl') out=true;      /* 작은 화면은 이름표 셋만 — 겹치면 읽기 어렵다 */
+      b.style.display = out ? 'none' : '';
+      b.style.left=Math.round(p.x)+'px'; b.style.top=Math.round(p.y)+'px';
+    });
+  }
+
+  function loop(){
+    if(!running) return;
+    raf=requestAnimationFrame(loop);
+    var moved=controls.update();
+    if(moved||needsRender){
+      renderer.render(scene,camera);
+      placeLabels();
+      needsRender=false;
+    }
+  }
+  function start(){ if(running) return; running=true; needsRender=true; loop(); }
+  function stop(){ running=false; if(raf) cancelAnimationFrame(raf); raf=0; }
+
+  try{
+    build();
+    resize();
+    stage.classList.add('is3d');
+    canvas.hidden=false; labelBox.hidden=false; tip.hidden=false;
+    window.LAB3D={ ready:true, apply:apply, resize:resize, start:start, stop:stop };
+    var hideTip=function(){ if(tip) tip.hidden=true; canvas.removeEventListener('pointerdown',hideTip); };
+    canvas.addEventListener('pointerdown',hideTip);
+    setTimeout(hideTip, 7000);
+    if(window.ResizeObserver) new ResizeObserver(function(){ resize(); }).observe(stage);
+    else window.addEventListener('resize', resize);
+    if(window.IntersectionObserver){
+      new IntersectionObserver(function(es){ es.forEach(function(e){ e.isIntersecting?start():stop(); }); },{threshold:0.05}).observe(stage);
+    } else start();
+    document.addEventListener('visibilitychange', function(){ document.hidden?stop():start(); });
+    /* 지금 값으로 한 번 맞춰 둔다 */
+    if(typeof lightDraw==='function') lightDraw();
+    else if(typeof window.lightDraw==='function') window.lightDraw();
+  }catch(err){
+    /* WebGL 이 없거나 막히면 2D 실험실을 그대로 쓴다 */
+    if(window.console&&console.warn) console.warn('3D 실험실을 열 수 없어 2D로 둡니다.', err);
+    stage.classList.remove('is3d');
+    canvas.hidden=true; if(labelBox) labelBox.hidden=true; if(tip) tip.hidden=true;
+    window.LAB3D=null;
+  }
 })();
 </script>
 </body>
